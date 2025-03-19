@@ -51,7 +51,7 @@ app = FastAPI()
 # Setup CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Only allow frontend from localhost:3000
+    allow_origins=["http://localhost:3000", "https://saathi-eight.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
