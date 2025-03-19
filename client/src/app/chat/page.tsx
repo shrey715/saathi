@@ -141,13 +141,19 @@ export default function ChatPage() {
   const [currentExpression, setCurrentExpression] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [inCrisisMode, setInCrisisMode] = useState(false);
-  const [previousMessages, setPreviousMessages] = useState([]);
+  const [previousMessages, setPreviousMessages] = useState<{
+    id: number;
+    sender: string;
+    content: string;
+    timestamp: string;
+    expression: string;
+  }[]>([]);
   const [isResettingChat, setIsResettingChat] = useState(false);
   const [token, setToken] = useState('');
   const [currentEmotion, setCurrentEmotion] = useState('default');
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
-  const chatContainerRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(70); // default estimation
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -347,7 +353,7 @@ export default function ChatPage() {
     }
   };
 
-  const sendMessage = async (e, suggestedMessage = null) => {
+  const sendMessage = async (e?: React.FormEvent, suggestedMessage?: string) => {
     e?.preventDefault();
     const content = suggestedMessage || inputMessage;
     if (content.trim() === '') return;
@@ -357,7 +363,8 @@ export default function ChatPage() {
       id: Date.now(),
       sender: 'user',
       content: content,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      expression: "default" // Add the required expression property
     };
 
     setMessages(prev => [...prev, userMessage]);

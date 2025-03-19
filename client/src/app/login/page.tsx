@@ -49,8 +49,9 @@ export default function Login() {
     
             // On successful login, redirect to home page
             router.push('/home');
-        } catch (err) {
-            setError(err.message || 'Invalid username or password. Please try again.');
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Invalid username or password. Please try again.';
+            setError(errorMessage);
             console.error('Login error:', err);
         } finally {
             setIsLoading(false);

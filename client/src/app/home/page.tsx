@@ -4,11 +4,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, Sun, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
+import router from 'next/router';
+
+// Define the UserType interface
+interface UserType {
+  id?: string;
+  username?: string;
+  name?: string;
+  email?: string;
+  dob?: string;
+  age?: number | null;
+  journalCount?: number;
+  joinDate?: Date | null;
+  created_at?: string;
+  createdAt?: string;
+  journals?: any[];
+}
 
 const HomePage = () => {
   const [currentDay, setCurrentDay] = useState(7);
   const [totalDays, setTotalDays] = useState(30);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,11 +48,11 @@ const HomePage = () => {
         router.push('/login');
       }
     };
-    
+
     checkAuth();
   }, [router]);
   if (!user) {
-      // Loading state while checking authentication
+    // Loading state while checking authentication
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center">
         <div className="w-16 h-16 border-4 border-indigo-400 border-t-indigo-200 rounded-full animate-spin"></div>
@@ -79,11 +95,11 @@ const vibrantColors = {
 // Enhanced emojis and motivational phrases
 const dayEmojis = ["🌈", "⭐", "🌟", "✨", "🌻", "🦋", "🎈", "🎯", "🚀", "💫", "🍀", "🌞"];
 const motivationalPhrases = [
-  "You're awesome!", 
-  "Keep shining!", 
-  "Great job!", 
-  "You rock!", 
-  "Fantastic!", 
+  "You're awesome!",
+  "Keep shining!",
+  "Great job!",
+  "You rock!",
+  "Fantastic!",
   "Superstar!",
   "Keep going!",
   "You got this!",
@@ -93,7 +109,7 @@ const motivationalPhrases = [
   "Unstoppable!"
 ];
 
-const calculateAge = (dob) => {
+const calculateAge = (dob?: string): number | null => {
   if (!dob) return null;
 
   const birthDate = new Date(dob);
@@ -111,14 +127,13 @@ const calculateAge = (dob) => {
 };
 
 // User details fetching function that follows the same pattern as fetchJournals
-const fetchUserDetails = async () => {
+const fetchUserDetails = async (): Promise<UserType | null> => {
   try {
     // Get the auth token from localStorage
     const token = localStorage.getItem('accessToken');
 
     if (!token) {
       console.error('Authentication token not found');
-      router.push('/login');
       return null;
     }
 
@@ -139,7 +154,7 @@ const fetchUserDetails = async () => {
     // If we have valid user data
     if (data) {
       // Transform the data based on your backend response
-      const enhancedUserData = {
+      const enhancedUserData: UserType = {
         ...data,
         // Use username as display name
         name: data.username,
@@ -210,7 +225,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
   const [currentFact, setCurrentFact] = useState(0);
   const [currentEmoji, setCurrentEmoji] = useState(0);
   const [currentPhrase, setCurrentPhrase] = useState(0);
-  const scrollContainerRef = useRef(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Activity types that repeat through days with vibrant colors
   const activities = [
@@ -220,7 +235,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
     { type: "mood", emoji: "😊", color: vibrantColors.sunny, name: "Mood Check", accent: "🌞" },
     { type: "gratitude", emoji: "🙏", color: vibrantColors.coral, name: "Gratitude", accent: "💖" },
     { type: "mindfulness", emoji: "🧠", color: vibrantColors.tangerine, name: "Mindfulness", accent: "🕊️" },
-    {type: "music", emoji: "🎵", color: vibrantColors.sunny, name: "Music", accent: "🎶"},
+    { type: "music", emoji: "🎵", color: vibrantColors.sunny, name: "Music", accent: "🎶" },
   ];
 
   // Generate all days data with enhanced properties
@@ -233,7 +248,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
       const isSpecial = dayNumber % 5 === 0; // Every 5th day is a milestone
       const emoji = dayEmojis[i % dayEmojis.length];
       const phrase = motivationalPhrases[i % motivationalPhrases.length];
-      
+
       return {
         day: dayNumber,
         completed,
@@ -255,21 +270,21 @@ const JourneyPath = ({ currentDay, totalDays }) => {
       setCurrentEmoji((prev) => (prev + 1) % dayEmojis.length);
       setCurrentPhrase((prev) => (prev + 1) % motivationalPhrases.length);
     }, 5000);
-    
+
     return () => clearInterval(timer);
   }, []);
-  
+
   // Auto-scroll to center the current day when component mounts
   useEffect(() => {
     if (scrollContainerRef.current) {
       const container = scrollContainerRef.current;
       const currentDayElement = container.querySelector('.current-day');
-      
+
       if (currentDayElement) {
         const containerWidth = container.clientWidth;
-        const elementLeft = currentDayElement.offsetLeft;
-        const elementWidth = currentDayElement.clientWidth;
-        
+        const elementLeft = (currentDayElement as HTMLElement).offsetLeft;
+        const elementWidth = (currentDayElement as HTMLElement).clientWidth;
+
         // Center the element in the container
         const scrollPosition = elementLeft - (containerWidth / 2) + (elementWidth / 2);
         container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
@@ -277,7 +292,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
     }
   }, [currentDay]);
 
-  {/* Change wellness tip every 2-3 seconds */}
+  {/* Change wellness tip every 2-3 seconds */ }
   useEffect(() => {
     const tipTimer = setInterval(() => {
       setCurrentFact((prev) => (prev + 1) % mentalHealthFacts.length);
@@ -292,7 +307,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
     const endIdx = Math.min(totalDays - 1, currentDay + 2);
     return days.slice(startIdx, endIdx + 1);
   };
-  
+
   const visibleDays = getVisibleDays();
   const currentFocus = currentDay - Math.max(0, currentDay - 3) - 1;
 
@@ -303,10 +318,10 @@ const JourneyPath = ({ currentDay, totalDays }) => {
     if (day % 3 === 0) return "✨"; // Special day
     return ""; // Regular day
   };
-  
+
   return (
     <div className="py-8 px-4">
-      <motion.h2 
+      <motion.h2
         className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-transparent bg-clip-text"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -314,9 +329,9 @@ const JourneyPath = ({ currentDay, totalDays }) => {
       >
         Your Journey {dayEmojis[currentEmoji]}
       </motion.h2>
-      
+
       {/* Current Day Celebration Card */}
-      <motion.div 
+      <motion.div
         className="bg-gradient-to-r from-indigo-100 via-purple-100 to-blue-100 rounded-xl p-5 shadow-lg mb-8 border-2 border-purple-200 relative overflow-hidden"
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300 }}
@@ -328,13 +343,13 @@ const JourneyPath = ({ currentDay, totalDays }) => {
         <div className="absolute bottom-0 left-0 h-16 w-16 opacity-10">
           <Star className="w-full h-full text-blue-400" />
         </div>
-        
+
         <div className="flex justify-between items-center mb-3">
           <div>
             <h3 className="text-xl font-bold text-indigo-600 flex items-center">
-              Day {currentDay} <span className="ml-2 text-2xl">{days[currentDay-1].emoji}</span>
+              Day {currentDay} <span className="ml-2 text-2xl">{days[currentDay - 1].emoji}</span>
             </h3>
-            <motion.p 
+            <motion.p
               className="text-sm text-purple-600 font-medium"
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -342,7 +357,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
               {motivationalPhrases[currentPhrase]}
             </motion.p>
           </div>
-          <motion.div 
+          <motion.div
             className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl w-20 h-20 flex items-center justify-center shadow-lg"
             whileHover={{ rotate: 10 }}
             whileTap={{ scale: 0.95 }}
@@ -354,17 +369,17 @@ const JourneyPath = ({ currentDay, totalDays }) => {
             </div>
           </motion.div>
         </div>
-        
+
         <div className="relative h-6 w-full bg-white/50 rounded-full p-1 mb-2">
-          <div 
+          <div
             className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-400 via-purple-500 to-blue-500 rounded-full"
             style={{ width: `${(currentDay / totalDays) * 100}%` }}
           >
             {/* Progress bar glow effect */}
             <div className="absolute inset-0 rounded-full bg-white opacity-30 animate-pulse"></div>
-            
+
             {/* Animated star at progress end */}
-            <motion.div 
+            <motion.div
               className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 text-lg"
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
@@ -373,25 +388,25 @@ const JourneyPath = ({ currentDay, totalDays }) => {
             </motion.div>
           </div>
         </div>
-        
+
         <div className="flex justify-between text-xs font-medium">
           <span className="text-indigo-600">Streak: {currentDay} days</span>
           <span className="text-purple-600">{totalDays - currentDay} days to go!</span>
         </div>
       </motion.div>
-      
+
       {/* Daily Activity Card - Vibrant version */}
-      <motion.div 
+      <motion.div
         className="bg-white rounded-xl p-5 shadow-lg mb-8 border-2 border-teal-100 relative overflow-hidden"
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300 }}
-        style={{ 
-          background: `radial-gradient(circle at top right, ${days[currentDay-1].activity.color}15, white)` 
+        style={{
+          background: `radial-gradient(circle at top right, ${days[currentDay - 1].activity.color}15, white)`
         }}
       >
-        <div className="absolute top-2 right-2 text-xl opacity-50">{days[currentDay-1].activity.accent}</div>
+        <div className="absolute top-2 right-2 text-xl opacity-50">{days[currentDay - 1].activity.accent}</div>
         <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-gradient-to-tr from-teal-100 to-transparent opacity-40 blur-xl"></div>
-        
+
         <h3 className="text-lg font-bold text-teal-700 mb-4 flex items-center">
           <span className="mr-2">Today's Magic</span>
           <motion.span
@@ -401,30 +416,30 @@ const JourneyPath = ({ currentDay, totalDays }) => {
             ✨
           </motion.span>
         </h3>
-        
+
         <div className="flex items-center gap-4">
-          <motion.div 
+          <motion.div
             className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-md"
-            style={{ backgroundColor: `${days[currentDay-1].activity.color}30` }}
+            style={{ backgroundColor: `${days[currentDay - 1].activity.color}30` }}
             whileHover={{ scale: 1.1, rotate: 5 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            {days[currentDay-1].activity.emoji}
+            {days[currentDay - 1].activity.emoji}
           </motion.div>
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-800 text-lg">{days[currentDay-1].activity.name}</h4>
+            <h4 className="font-semibold text-gray-800 text-lg">{days[currentDay - 1].activity.name}</h4>
             <p className="text-sm text-gray-600">
-              Brighten your day with a {days[currentDay-1].activity.name.toLowerCase()} session. You'll feel amazing!
+              Brighten your day with a {days[currentDay - 1].activity.name.toLowerCase()} session. You'll feel amazing!
             </p>
           </div>
         </div>
-        
-        <motion.button 
+
+        <motion.button
           className="mt-4 w-full py-3 bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-medium rounded-lg text-center shadow-md relative overflow-hidden group"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => {
-            if (days[currentDay-1].activity.name.toLowerCase() === 'music') {
+            if (days[currentDay - 1].activity.name.toLowerCase() === 'music') {
               console.log('Redirecting to music page');
               window.location.href = '/music';
             }
@@ -437,30 +452,30 @@ const JourneyPath = ({ currentDay, totalDays }) => {
           </span>
         </motion.button>
       </motion.div>
-      
+
       {/* Day path visualization - Redesigned with wavy banners */}
       <div className="mb-12 mt-10">
         <h3 className="text-lg font-bold mb-6 text-center bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-500 text-transparent bg-clip-text">Your wellness trail</h3>
-        
+
         <div className="relative">
           {/* Left shadow indicator */}
           <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
-          
+
           {/* Right shadow indicator */}
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
-          
+
           {/* Scrollable container */}
-          <div 
+          <div
             ref={scrollContainerRef}
             className="flex overflow-x-auto pb-10 pt-6 hide-scrollbar"
             style={{ scrollbarWidth: 'none' }}
           >
             {/* Path connecting line - wavy pattern */}
             <svg className="absolute top-[72px] left-0 w-full h-4 z-0" width="100%" height="10">
-              <path 
-                d="M0,5 Q30,12 60,5 T120,5 T180,5 T240,5 T300,5 T360,5 T420,5" 
-                fill="none" 
-                stroke="#e2e8f0" 
+              <path
+                d="M0,5 Q30,12 60,5 T120,5 T180,5 T240,5 T300,5 T360,5 T420,5"
+                fill="none"
+                stroke="#e2e8f0"
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeDasharray="1 2"
@@ -471,46 +486,45 @@ const JourneyPath = ({ currentDay, totalDays }) => {
                 }}
               />
             </svg>
-            
+
             {/* All days with wavy flag design */}
             <div className="flex space-x-1 px-10 relative">
               {days.map((day, index) => {
                 // Determine colors based on completion and status
-                const flagColor = day.completed 
-                  ? day.activity.color 
-                  : day.isCurrent 
-                    ? vibrantColors.sunny 
+                const flagColor = day.completed
+                  ? day.activity.color
+                  : day.isCurrent
+                    ? vibrantColors.sunny
                     : "#d1d5db"; // gray-300
-                
+
                 const textColor = day.completed || day.isCurrent
                   ? "text-white"
                   : "text-gray-500";
-                
+
                 // Generate wavy position
                 const offsetY = day.waveFactor;
-                
+
                 return (
-                  <div 
-                    key={day.day} 
+                  <div
+                    key={day.day}
                     className={`flex flex-col items-center z-10 ${day.isCurrent ? 'current-day' : ''}`}
-                    style={{ 
+                    style={{
                       marginTop: `${day.isCurrent ? -15 : offsetY}px`,
                       transition: "all 0.3s ease"
                     }}
                   >
                     {/* Flag Pole */}
-                    <div 
+                    <div
                       className={`relative w-10 mb-1 transition-all duration-300 ${day.isCurrent ? 'scale-110' : ''}`}
                       style={{ height: day.isCurrent ? '85px' : '70px' }}
                     >
                       {/* Pole */}
-                      <div 
-                        className={`absolute left-1/2 bottom-0 w-1.5 rounded-full -translate-x-1/2 ${
-                          day.completed ? 'bg-gradient-to-b from-yellow-600 to-yellow-400' : 'bg-gray-300'
-                        }`}
+                      <div
+                        className={`absolute left-1/2 bottom-0 w-1.5 rounded-full -translate-x-1/2 ${day.completed ? 'bg-gradient-to-b from-yellow-600 to-yellow-400' : 'bg-gray-300'
+                          }`}
                         style={{ height: day.isCurrent ? '85px' : '70px' }}
                       ></div>
-                      
+
                       {/* Flag - Wavy design */}
                       <motion.div
                         className="absolute top-0 left-1/2 transform -translate-x-1/2 w-10 h-14 overflow-visible"
@@ -519,8 +533,8 @@ const JourneyPath = ({ currentDay, totalDays }) => {
                       >
                         {/* Wavy flag background with gradient */}
                         <svg width="40" height="50" viewBox="0 0 40 50" className="drop-shadow-md">
-                          <path 
-                            d="M1,5 Q10,2 20,5 T40,5 V25 Q30,22 20,25 T1,25 Z" 
+                          <path
+                            d="M1,5 Q10,2 20,5 T40,5 V25 Q30,22 20,25 T1,25 Z"
                             fill={`url(#gradient-${day.day})`}
                             stroke={day.completed ? "white" : "#d1d5db"}
                             strokeWidth="1"
@@ -528,8 +542,8 @@ const JourneyPath = ({ currentDay, totalDays }) => {
                           >
                             {/* Wave animation for current day */}
                             {day.isCurrent && (
-                              <animate 
-                                attributeName="d" 
+                              <animate
+                                attributeName="d"
                                 dur="3s"
                                 repeatCount="indefinite"
                                 values="
@@ -546,9 +560,9 @@ const JourneyPath = ({ currentDay, totalDays }) => {
                             </linearGradient>
                           </defs>
                         </svg>
-                      
+
                         {/* Flag content */}
-                        <div 
+                        <div
                           className={`absolute inset-0 flex items-center justify-center flex-col ${textColor}`}
                           style={{ top: '0px' }} // Changed from 2px to 0px to move numbers up
                         >
@@ -556,10 +570,10 @@ const JourneyPath = ({ currentDay, totalDays }) => {
                           <span className="text-xs">{day.emoji}</span>
                         </div>
                       </motion.div>
-                      
+
                       {/* Star for special days or milestones */}
                       {(day.isSpecial || day.isCurrent) && (
-                        <motion.div 
+                        <motion.div
                           className="absolute -top-3 -right-3"
                           animate={day.isCurrent ? { rotate: [0, 20, 0, -20, 0] } : {}}
                           transition={day.isCurrent ? { duration: 2, repeat: Infinity } : {}}
@@ -567,12 +581,11 @@ const JourneyPath = ({ currentDay, totalDays }) => {
                           <span className="text-lg">{getStarEmoji(day.day)}</span>
                         </motion.div>
                       )}
-                      
+
                       {/* Bottom emoji */}
-                      <motion.div 
-                        className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 -translate-y-full rounded-full w-6 h-6 flex items-center justify-center ${
-                          day.completed || day.isCurrent ? 'opacity-100' : 'opacity-40'
-                        }`}
+                      <motion.div
+                        className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 -translate-y-full rounded-full w-6 h-6 flex items-center justify-center ${day.completed || day.isCurrent ? 'opacity-100' : 'opacity-40'
+                          }`}
                         whileHover={{
                           scale: 1.1,
                           rotate: 10,
@@ -582,7 +595,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
                         {day.emoji}
                       </motion.div>
                     </div>
-                    
+
                     {/* Day label */}
                     <span className={`text-xs mt-1 font-medium ${day.isCurrent ? 'text-indigo-600' : 'text-gray-500'}`}>
                       Day {day.day}
@@ -592,8 +605,8 @@ const JourneyPath = ({ currentDay, totalDays }) => {
               })}
             </div>
           </div>
-          
-            {/* Navigation indicators
+
+          {/* Navigation indicators
             <div className="absolute inset-y-0 left-0 flex items-center">
             <button 
               className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-indigo-600"
@@ -621,12 +634,12 @@ const JourneyPath = ({ currentDay, totalDays }) => {
             </div> */}
         </div>
       </div>
-      
+
       {/* Mental Health Tip Card with improved transitions */}
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 shadow-sm mb-8 relative overflow-hidden">
         <AnimatePresence mode="wait">
-          <motion.div 
-            key={currentFact} 
+          <motion.div
+            key={currentFact}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -645,7 +658,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
             </div>
           </motion.div>
         </AnimatePresence>
-        
+
         {/* Tip indicator dots */}
         <div className="flex justify-center mt-4">
           {mentalHealthFacts.map((_, index) => (
@@ -653,7 +666,7 @@ const JourneyPath = ({ currentDay, totalDays }) => {
               key={index}
               className={`w-1.5 h-1.5 rounded-full mx-0.5`}
               initial={false}
-              animate={{ 
+              animate={{
                 backgroundColor: index === currentFact ? '#6366f1' : '#d1d5db',
                 scale: index === currentFact ? 1.2 : 1
               }}
@@ -669,9 +682,9 @@ const JourneyPath = ({ currentDay, totalDays }) => {
 
 // Mobile Header component with profile dropdown
 const MobileHeader = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch user details on component mount
   useEffect(() => {
@@ -681,7 +694,7 @@ const MobileHeader = () => {
         setUser(userDetails);
       }
     };
-    
+
     getUserInfo();
   }, []);
 
@@ -692,7 +705,7 @@ const MobileHeader = () => {
         setIsDropdownOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -700,12 +713,12 @@ const MobileHeader = () => {
   // Get user initials for the avatar
   const getUserInitials = () => {
     if (!user || !user.name) return "US";
-    
+
     const nameParts = user.name.split(' ');
     if (nameParts.length >= 2) {
       return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
     }
-    
+
     return nameParts[0].substring(0, 2).toUpperCase();
   };
 
@@ -721,19 +734,19 @@ const MobileHeader = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
         </button>
-        
+
         {/* User profile with dropdown */}
         <div className="relative" ref={dropdownRef}>
-          <button 
+          <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-medium hover:bg-indigo-200 transition-colors"
           >
             {getUserInitials()}
           </button>
-          
+
           {/* Profile dropdown */}
           {isDropdownOpen && (
-            <motion.div 
+            <motion.div
               className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -745,13 +758,13 @@ const MobileHeader = () => {
                 <p className="text-sm font-medium text-gray-800">{user?.name || "User"}</p>
                 <p className="text-xs text-gray-500 truncate">{user?.email || ""}</p>
               </div>
-              
+
               {/* Menu items - removed Account and Preferences, kept only Profile Settings */}
               <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50">
                 Profile Settings
               </a>
               <div className="border-t border-gray-100"></div>
-              <button 
+              <button
                 onClick={() => {
                   localStorage.removeItem('accessToken');
                   window.location.href = '/login';
@@ -769,24 +782,24 @@ const MobileHeader = () => {
 };
 
 // Mobile Hero component
-const MobileHero = ({ user }) => {
+const MobileHero = ({ user }: { user: UserType | null }) => {
   // Handle cases where user data might not be available yet
   const displayName = user?.username || "Friend";
-  
+
   return (
     <div className="text-center relative z-10 p-4 rounded-2xl overflow-hidden">
       {/* Enhanced background with multiple layers and better contrast */}
       <div className="absolute inset-0 bg-gradient-to-br from-teal-300/70 via-emerald-300/70 to-teal-300/70 opacity-80 rounded-xl"></div>
-      
+
       {/* Decorative elements */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-teal-400 rounded-full opacity-20 blur-2xl"></div>
       <div className="absolute bottom-0 left-0 w-20 h-20 bg-emerald-400 rounded-full opacity-20 blur-2xl"></div>
-      
+
       {/* Subtle pattern overlay */}
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle,_white_1px,_transparent_1px)] bg-[length:12px_12px]"></div>
-      
+
       {/* Content with improved contrast */}
-      <motion.h1 
+      <motion.h1
         className="text-3xl font-bold mb-3 bg-gradient-to-r from-teal-800 via-emerald-800 to-teal-700 text-transparent bg-clip-text relative"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -794,8 +807,8 @@ const MobileHero = ({ user }) => {
       >
         Welcome Back, {displayName}!
       </motion.h1>
-      
-      <motion.p 
+
+      <motion.p
         className="text-sm text-teal-900 mb-6 max-w-xs mx-auto font-medium"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -803,7 +816,7 @@ const MobileHero = ({ user }) => {
       >
         Continue your wellness journey and reach new milestones today.
       </motion.p>
-      
+
       {/* Glowing accent border */}
       <div className="absolute inset-x-4 bottom-0 h-1 bg-gradient-to-r from-teal-500/50 via-emerald-500/50 to-teal-500/50 rounded-full blur-sm"></div>
     </div>
@@ -816,7 +829,7 @@ const MobileFeatures = () => {
   return (
     <section className="px-4 py-8 bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
       <div className="flex justify-center mb-8">
-        <button 
+        <button
           className="text-xl font-bold text-center text-indigo-700 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           onClick={() => router.push('/explore')}
         >
@@ -824,7 +837,7 @@ const MobileFeatures = () => {
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         {[
           {
@@ -876,8 +889,8 @@ const MobileFooter = () => {
           { name: "Community", icon: "👥", active: false },
           { name: "Profile", icon: "👤", active: false }
         ].map((item, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className={`flex flex-col items-center ${item.active ? 'text-indigo-600' : 'text-gray-400'}`}
           >
             <div className="text-xl mb-1">{item.icon}</div>

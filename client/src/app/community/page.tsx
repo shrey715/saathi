@@ -5,25 +5,13 @@ import {
   MessageCircle, 
   User, 
   Plus, 
-  ChevronLeft,
   Search, 
   X, 
   Users,
-  Award, 
   UserCircle2,
-  Sparkles,
-  Lightbulb,
   SendHorizonal,
   Frown,
   Heart,
-  PartyPopper,
-  Star,
-  CloudRain,
-  Sun,
-  Smile,
-  Music,
-  Coffee,
-  HeartHandshake,
   Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,8 +55,18 @@ const moodOptions = [
 ];
 
 // Background shape generator - more playful with smaller, bouncy shapes
-const generateBackgroundShapes = (color) => {
-  const shapes = [];
+const generateBackgroundShapes = (color: string | null) => {
+  const shapes: Array<{
+    id: number;
+    x: number;
+    y: number;
+    size: number;
+    color: string;
+    opacity: number;
+    rotation: number;
+    animationDuration: number;
+  }> = [];
+  
   for (let i = 0; i < 20; i++) {
     shapes.push({
       id: i,
@@ -170,15 +168,24 @@ export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
   const [footerHeight, setFooterHeight] = useState(80);
-  const [backgroundShapes, setBackgroundShapes] = useState([]);
+  const [backgroundShapes, setBackgroundShapes] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    size: number;
+    color: string;
+    opacity: number;
+    rotation: number;
+    animationDuration: number;
+  }>>([]);
   const [selectedMood, setSelectedMood] = useState(moodOptions[0]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState(null);
-  const containerRef = useRef(null);
-  const textareaRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     // Authentication check
     useEffect(() => {
@@ -260,7 +267,7 @@ export default function CommunityPage() {
   useEffect(() => {
     if (isLoading) return; // Skip if still authenticating
 
-    setBackgroundShapes(generateBackgroundShapes());
+    setBackgroundShapes(generateBackgroundShapes(null));
   }, []);
 
   // // Fetch posts from API
@@ -338,7 +345,7 @@ export default function CommunityPage() {
       console.error('Error creating post:', error);
       toast.error('Failed to create post');
       
-      if (error.message === 'Not authenticated') {
+      if (error instanceof Error && error.message === 'Not authenticated') {
         router.push('/login');
       }
     } finally {
@@ -363,7 +370,7 @@ export default function CommunityPage() {
       console.error('Error liking post:', error);
       toast.error('Failed to like post');
 
-      if (error.message === 'Not authenticated') {
+      if (error instanceof Error && error.message === 'Not authenticated') {
         router.push('/login');
       }
     }

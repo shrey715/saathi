@@ -50,8 +50,8 @@ export default function Signup() {
 
             // On successful signup, redirect to login page
             router.push('/login?registered=true');
-        } catch (err) {
-            setError(err.message || 'Failed to create account. Please try again.');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to create account. Please try again.');
             console.error('Signup error:', err);
         } finally {
             setIsLoading(false);

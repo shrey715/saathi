@@ -1,11 +1,12 @@
 "use client";
 
-import { Router } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 export default function Home() {
+  const router = useRouter();
   const [activeFeature, setActiveFeature] = useState(0);
   const [hoverIndex, setHoverIndex] = useState(-1);
   const [floating, setFloating] = useState({ x: 0, y: 0 });
@@ -96,8 +97,7 @@ export default function Home() {
               // User is logged in
               <button
                 onClick={() => {
-                  localStorage.removeItem('accessToken');
-                  Router.push('/');
+                  router.push('/');
                 }}
                 className="bg-gradient-to-r from-teal-500 to-blue-500 text-white px-5 py-2 rounded-full hover:from-teal-600 hover:to-blue-600 font-medium transition-all shadow-sm hover:shadow-md hover:scale-105"
               >
@@ -140,7 +140,7 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div className="flex justify-center" style={{ transform: `translate(${floating.x}px, ${floating.y}px)` }} className="transition-transform duration-300">
+            <div className="flex justify-center transition-transform duration-300" style={{ transform: `translate(${floating.x}px, ${floating.y}px)` }}>
               <div className="w-full max-w-md bg-white/90 shadow-lg rounded-2xl p-6 border border-teal-100 transform hover:rotate-1 transition-all hover:shadow-xl">
                 <div className="bg-gradient-to-r from-teal-50 to-blue-50 p-6 rounded-xl mb-4 shadow-sm relative">
                   {/* Animated decorative floating bubbles */}

@@ -830,4 +830,5 @@ async def like_post(post_id: dict, token: str = Depends(oauth2_scheme)):
     
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)
+    port = int(os.environ.get("PORT", 8000))  # Get port from environment
+    uvicorn.run(app, host="0.0.0.0", port=port)  # Listen on all interfaces

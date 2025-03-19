@@ -24,9 +24,35 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+// Define interfaces for our types
+interface JournalEntry {
+  id: string;
+  title: string;
+  content: string;
+  date: Date;
+  color: string;
+  emoji: string;
+}
+
+interface BackgroundShape {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  opacity: number;
+  rotation: number;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  // Add any other user properties you need
+}
 
 // Sample journal entries with vibrant colors
-const sampleEntries = [
+const sampleEntries: JournalEntry[] = [
   {
     id: "1",
     title: "Morning Reflections",
@@ -62,8 +88,8 @@ const sampleEntries = [
 ];
 
 // Background shape generator
-const generateBackgroundShapes = (color) => {
-  const shapes = [];
+const generateBackgroundShapes = (color: string): BackgroundShape[] => {
+  const shapes: BackgroundShape[] = [];
   for (let i = 0; i < 15; i++) {
     shapes.push({
       id: i,
@@ -79,20 +105,20 @@ const generateBackgroundShapes = (color) => {
 };
 
 export default function JournalPage() {
-  const [entries, setEntries] = useState([]);
-  const [currentEntry, setCurrentEntry] = useState(null);
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [currentEntry, setCurrentEntry] = useState<JournalEntry | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editableTitle, setEditableTitle] = useState("");
   const [editableContent, setEditableContent] = useState("");
   const [sortBy, setSortBy] = useState("date"); // 'date' or 'title'
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const textareaRef = useRef(null);
-  const containerRef = useRef(null);
+  const [user, setUser] = useState<User | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-   
+
   // Check authentication before loading any data
   useEffect(() => {
     const checkAuth = async () => {
@@ -133,12 +159,12 @@ export default function JournalPage() {
         router.push('/login');
       }
     };
-    
+
     checkAuth();
   }, [router]);
 
   // Move journals fetching to a separate function to be called after authentication
-  const fetchJournals = async (token) => {
+  const fetchJournals = async (token: string) => {
     try {
       if (!token) {
         console.error('Authentication token not found');
@@ -162,7 +188,7 @@ export default function JournalPage() {
 
       if (data && Array.isArray(data)) {
         // Transform the entries to ensure dates are Date objects
-        const journalEntries = data.map(entry => ({
+        const journalEntries = data.map((entry: any) => ({
           ...entry,
           date: new Date(entry.date)
         }));
@@ -178,7 +204,7 @@ export default function JournalPage() {
 
   // Handle creating a new entry
   const createNewEntry = () => {
-    const newEntry = {
+    const newEntry: JournalEntry = {
       id: Date.now().toString(),
       title: "New Journal Entry",
       content: "",
@@ -201,30 +227,30 @@ export default function JournalPage() {
 
   // Handle opening an entry
   // Other functions remain mostly unchanged
-  const openEntry = (entry) => {
+  const openEntry = (entry: JournalEntry) => {
     setCurrentEntry(entry);
     setEditableTitle(entry.title);
     setEditableContent(entry.content);
     setIsEditing(false);
   };
   // Handle deleting an entry
-  const deleteEntry = async (id) => {
+  const deleteEntry = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this entry?");
     if (!confirmed) return; // Exit if user cancels deletion
-  
+
     try {
       // Get the auth token from localStorage or wherever you store it
       const token = localStorage.getItem('accessToken');
-  
+
       if (!token) {
         console.error('Authentication token not found');
         return;
       }
-  
+
       console.log('Deleting journal entry:', id);
       // Match the backend API endpoint format
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/delete-journal';
-      
+
       const response = await fetch(backendUrl, {
         method: 'DELETE',
         headers: {
@@ -234,21 +260,21 @@ export default function JournalPage() {
         body: JSON.stringify({ id: id }), // Send the journal ID in the request body
         credentials: 'include'
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         console.error('Server error:', data);
         throw new Error(data.detail || 'Failed to delete journal entry');
       }
-  
+
       // Update state after successful deletion
       const updatedEntries = entries.filter(entry => entry.id !== id);
       setEntries(updatedEntries);
       if (currentEntry && currentEntry.id === id) {
         setCurrentEntry(null);
       }
-  
+
       console.log('Journal entry deleted successfully');
     } catch (err) {
       console.error('Delete Journal error:', err);
@@ -256,7 +282,9 @@ export default function JournalPage() {
   };
 
   // Handle saving edits
-  const saveChanges = async (e) => {
+  const saveChanges = async (e: React.MouseEvent) => {
+    if (!currentEntry) return;
+
     const updatedEntries = entries.map(entry =>
       entry.id === currentEntry.id
         ? {
@@ -273,7 +301,7 @@ export default function JournalPage() {
 
     try {
       // Create journal entry object to send to backend
-      const newEntry = {
+      const newEntry: JournalEntry = {
         id: currentEntry.id,
         title: editableTitle,
         content: editableContent,
@@ -327,7 +355,7 @@ export default function JournalPage() {
   // Sort entries
   const sortedEntries = [...filteredEntries].sort((a, b) => {
     if (sortBy === "date") {
-      return new Date(b.date) - new Date(a.date);
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     } else {
       return a.title.localeCompare(b.title);
     }
@@ -342,7 +370,7 @@ export default function JournalPage() {
       </div>
     );
   }
-  
+
 
   return (
     <div

@@ -26,9 +26,93 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Define TypeScript interfaces for data models
+interface YogaExercise {
+  id: number;
+  name: string;
+  description: string;
+  duration: string;
+  level: string;
+  benefits: string[];
+  image: string;
+  color: string;
+  emoji: string;
+}
+
+interface BreathingExercise {
+  id: number;
+  name: string;
+  description: string;
+  duration: string;
+  steps: string[];
+  benefits: string[];
+  color: string;
+  emoji: string;
+}
+
+interface BookRecommendation {
+  id: number;
+  title: string;
+  author: string;
+  description: string;
+  category: string;
+  mood?: string[];
+  image?: string;
+  color: string;
+  emoji: string;
+}
+
+interface InspiringQuote {
+  id: number;
+  quote: string;
+  author: string;
+  theme: string;
+  color: string;
+  emoji: string;
+}
+
+interface WellnessFact {
+  id: number;
+  fact: string;
+  source: string;
+  category: string;
+  color: string;
+  emoji: string;
+}
+
+interface Movie {
+  id: number;
+  title: string;
+  description: string;
+  year: number;
+  genre: string;
+  color: string;
+  emoji: string;
+}
+
+interface MoodMovies {
+  [mood: string]: Movie[];
+}
+
+interface BackgroundShape {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  opacity: number;
+  rotation: number;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  // Add other user properties as needed
+}
 
 // Sample data for yoga exercises
-const yogaExercises = [
+const yogaExercises: YogaExercise[] = [
   {
     id: 1,
     name: "Mountain Pose (Tadasana)",
@@ -76,7 +160,7 @@ const yogaExercises = [
 ];
 
 // Sample data for breathing exercises
-const breathingExercises = [
+const breathingExercises: BreathingExercise[] = [
   {
     id: 1,
     name: "Box Breathing",
@@ -126,56 +210,8 @@ const breathingExercises = [
   }
 ];
 
-// Sample data for book recommendations
-// const bookRecommendations = [
-//   {
-//     id: 1,
-//     title: "Atomic Habits",
-//     author: "James Clear",
-//     description: "Tiny changes, remarkable results. Learn how small habits lead to big transformations.",
-//     category: "Personal Development",
-//     mood: ["growth", "motivation"],
-//     image: "/books/atomic-habits.jpg",
-//     color: "#5AA9FF", // Blue
-//     emoji: "📊"
-//   },
-//   {
-//     id: 2,
-//     title: "The Comfort Book",
-//     author: "Matt Haig",
-//     description: "A collection of consolations and stories to give hope through difficult times.",
-//     category: "Mental Wellness",
-//     mood: ["comfort", "healing"],
-//     image: "/books/comfort-book.jpg",
-//     color: "#4AD295", // Green
-//     emoji: "☕"
-//   },
-//   {
-//     id: 3,
-//     title: "The Subtle Art of Not Giving a F*ck",
-//     author: "Mark Manson",
-//     description: "A counterintuitive approach to living a good life by focusing on what truly matters.",
-//     category: "Self-Help",
-//     mood: ["perspective", "clarity"],
-//     image: "/books/subtle-art.jpg",
-//     color: "#FF9F5A", // Orange
-//     emoji: "🤔"
-//   },
-//   {
-//     id: 4,
-//     title: "Why Has Nobody Told Me This Before?",
-//     author: "Dr. Julie Smith",
-//     description: "A toolkit of simple strategies for managing anxiety, low mood, and other common mental health issues.",
-//     category: "Psychology",
-//     mood: ["understanding", "anxiety", "depression"],
-//     image: "/books/why-has-nobody.jpg",
-//     color: "#8A6FE8", // Purple
-//     emoji: "💡"
-//   }
-// ];
-
 // Sample data for inspiring quotes
-const inspiringQuotes = [
+const inspiringQuotes: InspiringQuote[] = [
   {
     id: 1,
     quote: "You don't have to see the whole staircase, just take the first step.",
@@ -219,7 +255,7 @@ const inspiringQuotes = [
 ];
 
 // Sample data for random wellness facts
-const wellnessFacts = [
+const wellnessFacts: WellnessFact[] = [
   {
     id: 1,
     fact: "Spending just 20 minutes in nature can significantly lower stress hormone levels.",
@@ -263,7 +299,7 @@ const wellnessFacts = [
 ];
 
 // Sample data for mood-based movie recommendations
-const moodMovies = {
+const moodMovies: MoodMovies = {
   anxiety: [
     {
       id: 1,
@@ -347,8 +383,8 @@ const moodMovies = {
 };
 
 // Background shape generator for the explore page - more subtle
-const generateBackgroundShapes = () => {
-  const shapes = [];
+const generateBackgroundShapes = (): BackgroundShape[] => {
+  const shapes: BackgroundShape[] = [];
   for (let i = 0; i < 12; i++) {
     shapes.push({
       id: i,
@@ -366,19 +402,19 @@ const generateBackgroundShapes = () => {
 };
 
 export default function ExplorePage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [bookRecommendations, setBookRecommendations] = useState([]);
-  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
-  const [currentMood, setCurrentMood] = useState("anxiety");
-  const [backgroundShapes, setBackgroundShapes] = useState([]);
-  const [bookmarkedItems, setBookmarkedItems] = useState([]);
-  const [footerHeight, setFooterHeight] = useState(80);
-  const [randomQuote, setRandomQuote] = useState(inspiringQuotes[0]);
-  const [randomFact, setRandomFact] = useState(wellnessFacts[0]);
-  const containerRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [bookRecommendations, setBookRecommendations] = useState<BookRecommendation[]>([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState<boolean>(true);
+  const [currentMood, setCurrentMood] = useState<string>("anxiety");
+  const [backgroundShapes, setBackgroundShapes] = useState<BackgroundShape[]>([]);
+  const [bookmarkedItems, setBookmarkedItems] = useState<string[]>([]);
+  const [footerHeight, setFooterHeight] = useState<number>(80);
+  const [randomQuote, setRandomQuote] = useState<InspiringQuote>(inspiringQuotes[0]);
+  const [randomFact, setRandomFact] = useState<WellnessFact>(wellnessFacts[0]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
   // Check authentication
@@ -521,7 +557,7 @@ export default function ExplorePage() {
 
 
   // Toggle bookmarked status for an item
-  const toggleBookmark = (itemId, type) => {
+  const toggleBookmark = (itemId: number, type: string): void => {
     const bookmarkKey = `${type}-${itemId}`;
 
     if (bookmarkedItems.includes(bookmarkKey)) {
@@ -532,12 +568,12 @@ export default function ExplorePage() {
   };
 
   // Check if an item is bookmarked
-  const isBookmarked = (itemId, type) => {
+  const isBookmarked = (itemId: number, type: string): boolean => {
     return bookmarkedItems.includes(`${type}-${itemId}`);
   };
 
   // Get filtered content based on search query
-  const getFilteredContent = (content, fields) => {
+  const getFilteredContent = <T extends Record<string, any>>(content: T[], fields: string[]): T[] => {
     if (!searchQuery) return content;
 
     return content.filter(item => {
@@ -867,7 +903,7 @@ export default function ExplorePage() {
             </section>
           )}
 
-          
+
           {/* Book Recommendations - visible when on "all" or "media" tab */}
           {(activeCategory === 'all' || activeCategory === 'media') && (
             <section className="space-y-3">
@@ -877,7 +913,7 @@ export default function ExplorePage() {
                   <span className="text-xl">📚</span>
                 </h2>
               </div>
-              
+
               {isLoadingBooks ? (
                 <div className="flex justify-center items-center py-6">
                   <div className="w-8 h-8 border-2 border-indigo-400 border-t-indigo-200 rounded-full animate-spin"></div>

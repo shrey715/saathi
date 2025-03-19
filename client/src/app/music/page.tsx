@@ -86,51 +86,51 @@ const MusicPlayerPage = () => {
   const [isRepeat, setIsRepeat] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const audioRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
-    // Authentication check
-    useEffect(() => {
-      const checkAuth = async () => {
-        setIsLoading(true);
-        try {
-          const token = localStorage.getItem('accessToken');
-          if (!token) {
-            console.log('No authentication token found, redirecting to login');
-            router.push('/login');
-            return;
-          }
-  
-          // Verify token validity with a backend request
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/get-user-details';
-          const response = await fetch(backendUrl, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            credentials: 'include'
-          });
-  
-          if (!response.ok) {
-            console.log('Authentication failed, redirecting to login');
-            router.push('/login');
-            return;
-          }
-  
-          const userData = await response.json();
-          setUser(userData);
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Authentication check error:', error);
+  // Authentication check
+  useEffect(() => {
+    const checkAuth = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          console.log('No authentication token found, redirecting to login');
           router.push('/login');
+          return;
         }
-      };
-      
-      checkAuth();
-    }, [router]);
+
+        // Verify token validity with a backend request
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/get-user-details';
+        const response = await fetch(backendUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          console.log('Authentication failed, redirecting to login');
+          router.push('/login');
+          return;
+        }
+
+        const userData = await response.json();
+        setUser(userData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Authentication check error:', error);
+        router.push('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   // Get current track from index
   const currentTrack = musicData[currentTrackIndex];
@@ -148,18 +148,20 @@ const MusicPlayerPage = () => {
   // Handle playback
   const togglePlayPause = () => {
     if (isPlaying) {
-      audioRef.current.pause();
+      audioRef.current?.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current?.play().catch(err => console.error("Playback error:", err));
     }
     setIsPlaying(!isPlaying);
   };
 
   // Handle volume change
-  const handleVolumeChange = (value) => {
+  const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
     setVolume(newVolume);
-    audioRef.current.volume = newVolume;
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
     if (newVolume === 0) {
       setIsMuted(true);
     } else {
@@ -169,6 +171,8 @@ const MusicPlayerPage = () => {
 
   // Toggle mute
   const toggleMute = () => {
+    if (!audioRef.current) return;
+
     if (isMuted) {
       audioRef.current.volume = volume;
       setIsMuted(false);
@@ -179,13 +183,14 @@ const MusicPlayerPage = () => {
   };
 
   const handleTimeUpdate = useCallback(() => {
+    if (!audioRef.current) return;
     const currentTime = audioRef.current.currentTime;
     setCurrentTime(currentTime);
   }, []);
 
   // Also wrap changeTrack in useCallback
-  const changeTrack = useCallback((direction) => {
-    if(isLoading) return; // Prevent changing track while loading
+  const changeTrack = useCallback((direction: "next" | "prev") => {
+    if (isLoading) return; // Prevent changing track while loading
     let newIndex;
 
     if (isShuffle) {
@@ -205,17 +210,19 @@ const MusicPlayerPage = () => {
 
     setCurrentTrackIndex(newIndex);
     setCurrentTime(0);
-    if (isPlaying) {
+    if (isPlaying && audioRef.current) {
       setTimeout(() => {
-        audioRef.current.play();
+        audioRef.current?.play().catch(err => console.error("Playback error:", err));
       }, 100);
     }
-  }, [currentTrackIndex, isShuffle, isPlaying]);
+  }, [currentTrackIndex, isShuffle, isPlaying, isLoading]);
 
-  const handleSeek = (value) => {
+  const handleSeek = (value: number[]) => {
     const newTime = value[0];
     setCurrentTime(newTime);
-    audioRef.current.currentTime = newTime;
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
   }
 
   // Add the complete toggleFavorite function
@@ -231,35 +238,35 @@ const MusicPlayerPage = () => {
         return [...prevFavorites, currentTrack.id];
       }
     });
-  }, [currentTrack.id]);
+  }, [currentTrack.id, isLoading]);
 
   // Add the missing selectTrack function
-  const selectTrack = useCallback((index) => {
+  const selectTrack = useCallback((index: number) => {
     if (isLoading) return; // Prevent track changes while loading
     setCurrentTrackIndex(index);
     setCurrentTime(0);
     // Start playing the selected track
     setTimeout(() => {
       if (audioRef.current) {
-        audioRef.current.play();
+        audioRef.current.play().catch(err => console.error("Playback error:", err));
         setIsPlaying(true);
       }
     }, 100);
-  }, []);
+  }, [isLoading]);
 
   // Handle track end
   const handleTrackEnd = useCallback(() => {
     if (isLoading) return; // Prevent changes while loading
 
-    if (isRepeat) {
+    if (isRepeat && audioRef.current) {
       // Repeat current track
       audioRef.current.currentTime = 0;
-      audioRef.current.play();
+      audioRef.current.play().catch(err => console.error("Playback error:", err));
     } else {
       // Play next track
       changeTrack("next");
     }
-  }, [isRepeat, changeTrack]);
+  }, [isRepeat, changeTrack, isLoading]);
 
   // Set up audio element - updated with proper dependencies
   useEffect(() => {
@@ -269,9 +276,16 @@ const MusicPlayerPage = () => {
       audioRef.current.volume = volume;
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('ended', handleTrackEnd);
-
     }
-  }, [volume, handleTimeUpdate, handleTrackEnd]);
+
+    return () => {
+      // Cleanup event listeners
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+        audioRef.current.removeEventListener('ended', handleTrackEnd);
+      }
+    };
+  }, [volume, handleTimeUpdate, handleTrackEnd, isLoading]);
 
   // Reset current time when track changes
   useEffect(() => {
@@ -298,15 +312,15 @@ const MusicPlayerPage = () => {
     }
   };
 
-    // Loading state while checking authentication
-    if (isLoading) {
-      return (
-        <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 border-4 border-indigo-400 border-t-indigo-200 rounded-full animate-spin"></div>
-          <p className="mt-4 text-indigo-600 font-medium">Preparing your music...</p>
-        </div>
-      );
-    }
+  // Loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-indigo-400 border-t-indigo-200 rounded-full animate-spin"></div>
+        <p className="mt-4 text-indigo-600 font-medium">Preparing your music...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 overflow-hidden">

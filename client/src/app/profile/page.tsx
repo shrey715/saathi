@@ -4,12 +4,45 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// Add type interfaces
+interface UserData {
+  username?: string;
+  password?: string;
+  sex?: string;
+  dob?: string;
+  age?: number;
+  joinDate?: Date | string;
+  journals?: any[];
+  created_at?: string;
+  createdAt?: string;
+  [key: string]: any; // Allow for any additional properties
+}
+
+interface FormDataType {
+  username: string;
+  password: string;
+  newPassword: string;
+  confirmPassword: string;
+  sex: string;
+  dob: string;
+}
+
+interface ErrorsType {
+  username?: string;
+  password?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+  sex?: string;
+  dob?: string;
+  [key: string]: string | undefined;
+}
+
 const ProfilePage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState(null);
-  const [formData, setFormData] = useState({
+  const [user, setUser] = useState<UserData | null>(null);
+  const [formData, setFormData] = useState<FormDataType>({
     username: '',
     password: '',
     newPassword: '',
@@ -17,7 +50,7 @@ const ProfilePage = () => {
     sex: '',
     dob: ''
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<ErrorsType>({});
   const [editMode, setEditMode] = useState(false);
   const [changePassword, setChangePassword] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -28,7 +61,7 @@ const ProfilePage = () => {
         setLoading(true);
         // Get token from localStorage
         const token = localStorage.getItem('accessToken');
-        
+
         if (!token) {
           router.push('/login');
           return;
@@ -36,13 +69,13 @@ const ProfilePage = () => {
 
         // Fetch user data using the same function as in home page
         const userData = await fetchUserDetails();
-        
+
         if (!userData) {
           throw new Error('Failed to fetch user data');
         }
 
         setUser(userData);
-        
+
         // Initialize form data with user data
         setFormData({
           username: userData.username || '',
@@ -52,7 +85,7 @@ const ProfilePage = () => {
           sex: userData.sex || '',
           dob: userData.dob ? new Date(userData.dob).toISOString().split('T')[0] : ''
         });
-        
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -68,16 +101,16 @@ const ProfilePage = () => {
     try {
       // Get the auth token from localStorage
       const token = localStorage.getItem('accessToken');
-  
+
       if (!token) {
         console.error('Authentication token not found');
         router.push('/login');
         return null;
       }
-  
+
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/get-user-details';
       console.log('Fetching user details from:', backendUrl);
-      
+
       const response = await fetch(backendUrl, {
         method: 'GET',
         headers: {
@@ -85,12 +118,12 @@ const ProfilePage = () => {
         },
         credentials: 'include'
       });
-  
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to fetch user details');
       }
-  
+
       // If we have valid user data
       if (data) {
         console.log('Received user data:', data);
@@ -118,25 +151,25 @@ const ProfilePage = () => {
 
   const calculateAge = (dob) => {
     if (!dob) return null;
-  
+
     const birthDate = new Date(dob);
     const today = new Date();
-  
+
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDifference = today.getMonth() - birthDate.getMonth();
-  
+
     // Adjust age if birthday hasn't occurred yet this year
     if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-  
+
     return age;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear errors when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
@@ -144,19 +177,19 @@ const ProfilePage = () => {
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    
+    const newErrors: ErrorsType = {};
+
     if (editMode) {
 
       if (changePassword) {
         if (!formData.password) {
           newErrors.password = "Current password is required";
         }
-        
+
         if (!formData.newPassword) {
           newErrors.newPassword = "New password is required";
-        } 
-        
+        }
+
         if (formData.newPassword !== formData.confirmPassword) {
           newErrors.confirmPassword = "Passwords don't match";
         }
@@ -170,57 +203,62 @@ const ProfilePage = () => {
         }
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setSaving(true);
       const token = localStorage.getItem('accessToken');
-      
+
       if (!token) {
         router.push('/login');
         return;
       }
-      
+
       // Create payload with only changed fields
-      const payload = {
-        sex: formData.sex !== user.sex ? formData.sex : undefined,
-        dob: formData.dob !== (user.dob ? new Date(user.dob).toISOString().split('T')[0] : '') ? formData.dob : undefined
+      const payload: {
+        sex?: string;
+        dob?: string;
+        currentPassword?: string;
+        newPassword?: string;
+      } = {
+        sex: user && formData.sex !== user.sex ? formData.sex : undefined,
+        dob: user && formData.dob !== (user.dob ? new Date(user.dob).toISOString().split('T')[0] : '') ? formData.dob : undefined
       };
-      
+
       // Add password fields if changing password
       if (changePassword && formData.password && formData.newPassword) {
         payload.currentPassword = formData.password;
         payload.newPassword = formData.newPassword;
       }
-      
+
       // Remove undefined values
-      Object.keys(payload).forEach(key => 
+      Object.keys(payload).forEach(key =>
         payload[key] === undefined && delete payload[key]
       );
-      
+
       // Don't make API call if nothing changed
       if (Object.keys(payload).length === 0) {
         setEditMode(false);
         setSaving(false);
         return;
       }
-      
+
       // Log the payload for debugging
       console.log('Update payload:', payload);
-      
+
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/update-user';
       console.log('Making update request to:', backendUrl);
-      
+
       const response = await fetch(backendUrl, {
         method: 'POST',
         headers: {
@@ -230,9 +268,9 @@ const ProfilePage = () => {
         body: JSON.stringify(payload),
         credentials: 'include'
       });
-      
+
       console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         let errorData;
@@ -243,11 +281,11 @@ const ProfilePage = () => {
         }
         throw new Error(errorData.detail || `Failed to update profile: ${response.status}`);
       }
-      
+
       // Fetch updated user data
       const updatedUserData = await fetchUserDetails();
       setUser(updatedUserData);
-      
+
       // Update form data with new values
       setFormData(prev => ({
         ...prev,
@@ -258,12 +296,12 @@ const ProfilePage = () => {
         sex: updatedUserData.sex || '',
         dob: updatedUserData.dob ? new Date(updatedUserData.dob).toISOString().split('T')[0] : ''
       }));
-      
+
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setEditMode(false);
       setChangePassword(false);
-      
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error updating profile:', error);
       setMessage({ type: 'error', text: error.message || 'Failed to update profile. Please try again.' });
     } finally {
@@ -275,10 +313,10 @@ const ProfilePage = () => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -301,7 +339,7 @@ const ProfilePage = () => {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button 
+          <button
             onClick={goBack}
             className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
           >
@@ -384,7 +422,7 @@ const ProfilePage = () => {
                       Change Password
                     </label>
                   </div>
-                  
+
                   {changePassword && (
                     <div className="space-y-4 pl-6 border-l-2 border-indigo-100">
                       {/* Current password */}
@@ -407,7 +445,7 @@ const ProfilePage = () => {
                         </div>
                         {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                       </div>
-                      
+
                       {/* New password */}
                       <div className="relative">
                         <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
@@ -428,7 +466,7 @@ const ProfilePage = () => {
                         </div>
                         {errors.newPassword && <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>}
                       </div>
-                      
+
                       {/* Confirm password */}
                       <div className="relative">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
@@ -523,12 +561,12 @@ const ProfilePage = () => {
                       setErrors({});
                       // Reset form to original values
                       setFormData({
-                        username: user.username || '',
+                        username: user?.username || '',
                         password: '',
                         newPassword: '',
                         confirmPassword: '',
-                        sex: user.sex || '',
-                        dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : ''
+                        sex: user?.sex || '',
+                        dob: user?.dob ? new Date(user.dob).toISOString().split('T')[0] : ''
                       });
                     }}
                     className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
