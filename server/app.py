@@ -119,7 +119,7 @@ class MoodEntry(BaseModel):
 class UserSignup(BaseModel):
     username: str
     password: str
-    sex: str
+    gender: str
     dob: str  # Date of birth as string "YYYY-MM-DD"
 
 class UserLogin(BaseModel):
@@ -260,7 +260,7 @@ async def signup(user: UserSignup):
     user_data = {
         "username": user.username,
         "password": hashed_password,
-        "sex": user.sex,
+        "gender": user.gender,
         "dob": user.dob,
         "journals": [],
         "mood_history": [],  # Initialize empty mood history

@@ -8,7 +8,7 @@ import Link from 'next/link';
 interface UserData {
   username?: string;
   password?: string;
-  sex?: string;
+  gender?: string;
   dob?: string;
   age?: number;
   joinDate?: Date | string;
@@ -23,7 +23,7 @@ interface FormDataType {
   password: string;
   newPassword: string;
   confirmPassword: string;
-  sex: string;
+  gender: string;
   dob: string;
 }
 
@@ -32,7 +32,7 @@ interface ErrorsType {
   password?: string;
   newPassword?: string;
   confirmPassword?: string;
-  sex?: string;
+  gender?: string;
   dob?: string;
   [key: string]: string | undefined;
 }
@@ -47,7 +47,7 @@ const ProfilePage = () => {
     password: '',
     newPassword: '',
     confirmPassword: '',
-    sex: '',
+    gender: '',
     dob: ''
   });
   const [errors, setErrors] = useState<ErrorsType>({});
@@ -82,7 +82,7 @@ const ProfilePage = () => {
           password: '',
           newPassword: '',
           confirmPassword: '',
-          sex: userData.sex || '',
+          gender: userData.gender || '',
           dob: userData.dob ? new Date(userData.dob).toISOString().split('T')[0] : ''
         });
 
@@ -226,12 +226,12 @@ const ProfilePage = () => {
 
       // Create payload with only changed fields
       const payload: {
-        sex?: string;
+        gender?: string;
         dob?: string;
         currentPassword?: string;
         newPassword?: string;
       } = {
-        sex: user && formData.sex !== user.sex ? formData.sex : undefined,
+        gender: user && formData.gender !== user.gender ? formData.gender : undefined,
         dob: user && formData.dob !== (user.dob ? new Date(user.dob).toISOString().split('T')[0] : '') ? formData.dob : undefined
       };
 
@@ -293,7 +293,7 @@ const ProfilePage = () => {
         password: '',
         newPassword: '',
         confirmPassword: '',
-        sex: updatedUserData.sex || '',
+        gender: updatedUserData.gender || '',
         dob: updatedUserData.dob ? new Date(updatedUserData.dob).toISOString().split('T')[0] : ''
       }));
 
@@ -492,7 +492,7 @@ const ProfilePage = () => {
                 </div>
               )}
 
-              {/* Sex field */}
+              {/* Gender field */}
               <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                 <div className="relative">
@@ -503,8 +503,8 @@ const ProfilePage = () => {
                   </div>
                   {editMode ? (
                     <select
-                      name="sex"
-                      value={formData.sex}
+                      name="gender"
+                      value={formData.gender}
                       onChange={handleChange}
                       className="bg-indigo-50 border border-indigo-300 rounded-lg block w-full pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       disabled={saving}
@@ -517,7 +517,7 @@ const ProfilePage = () => {
                     </select>
                   ) : (
                     <div className="bg-gray-50 rounded-lg block w-full pl-10 pr-3 py-2 text-gray-700">
-                      {user?.sex ? user.sex.charAt(0).toUpperCase() + user.sex.slice(1) : "Not specified"}
+                      {user?.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : "Not specified"}
                     </div>
                   )}
                 </div>
@@ -565,7 +565,7 @@ const ProfilePage = () => {
                         password: '',
                         newPassword: '',
                         confirmPassword: '',
-                        sex: user?.sex || '',
+                        gender: user?.gender || '',
                         dob: user?.dob ? new Date(user.dob).toISOString().split('T')[0] : ''
                       });
                     }}

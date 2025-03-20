@@ -15,9 +15,8 @@ export default function Login() {
         e.preventDefault();
         setIsLoading(true);
         setError('');
-    
+
         try {
-            // Make API call to your backend login endpoint
             const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000') + '/api/login';
             const response = await fetch(backendUrl, {
                 method: 'POST',
@@ -29,25 +28,14 @@ export default function Login() {
                     password: password,
                 }),
             });
-    
+
             const data = await response.json();
-    
+
             if (!response.ok) {
                 throw new Error(data.detail || 'Login failed');
             }
-    
-            // Store the token in localStorage or a more secure storage
+
             localStorage.setItem('accessToken', data.access_token);
-    
-            // Set authorization header for future requests
-            const token = data.access_token;
-            if (token) {
-                // Set default auth header for future requests
-                // You might want to use a more sophisticated approach like an auth context
-                // or interceptor for this in a real application
-            }
-    
-            // On successful login, redirect to home page
             router.push('/home');
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Invalid username or password. Please try again.';
@@ -59,148 +47,93 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-b from-indigo-50 to-white">
-            <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-md space-y-8">
-                    <div className="text-center">
-                        <div className="flex justify-center">
-                            <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                                S
-                            </div>
-                        </div>
-                        <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-                            Welcome back to Saathi
-                        </h2>
-                        <p className="mt-2 text-sm text-gray-600">
-                            Your AI mental wellness companion
-                        </p>
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-teal-50 flex flex-col items-center justify-center text-gray-800 font-sans">
+            <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto">
+                        S
                     </div>
+                    <h2 className="mt-6 text-3xl font-bold text-teal-700">Welcome Back</h2>
+                    <p className="mt-2 text-sm text-gray-600">Log in to continue your wellness journey</p>
+                </div>
 
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-                            {error}
-                        </div>
-                    )}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm mt-4">
+                        {error}
+                    </div>
+                )}
 
-                    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                        <div className="space-y-4 rounded-md">
-                            <div>
-                                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                                    Username
-                                </label>
-                                <input
-                                    id="username"
-                                    name="username"
-                                    type="username"
-                                    autoComplete="username"
-                                    required
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-                                    placeholder="you@example.com"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                    Password
-                                </label>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
-                        {/* TODO: Implement Feature */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    id="remember-me"
-                                    name="remember-me"
-                                    type="checkbox"
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                                    Remember me
-                                </label>
-                            </div>
-
-                            {/* TODO: Implement Feature */}
-                            <div className="text-sm">
-                                <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-                                    Forgot your password?
-                                </Link>
-                            </div>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    <div className="space-y-4">
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                                Username
+                            </label>
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                required
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-gray-900"
+                                placeholder="Enter your username"
+                            />
                         </div>
 
                         <div>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
-                            >
-                                {isLoading ? 'Logging in...' : 'Log in'}
-                            </button>
-                        </div>
-                    </form>
-
-                    {/* TODO: Implement Feature */}
-                    <div className="mt-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300" />
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 grid grid-cols-3 gap-3">
-                            <button
-                                type="button"
-                                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
-                                </svg>
-                            </button>
-
-                            <button
-                                type="button"
-                                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10,2.25c-4.33,0-7.83,3.51-7.83,7.83c0,3.38,2.12,6.38,5.32,7.49c0.4,0.07,0.54-0.17,0.54-0.38c0-0.19-0.01-0.82-0.01-1.49c-2.01,0.37-2.53-0.49-2.69-0.94c-0.09-0.23-0.48-0.94-0.82-1.13c-0.28-0.15-0.68-0.52-0.01-0.53c0.63-0.01,1.08,0.58,1.23,0.82c0.72,1.21,1.87,0.87,2.33,0.66c0.07-0.52,0.28-0.87,0.51-1.07c-1.78-0.2-3.64-0.89-3.64-3.95c0-0.87,0.31-1.59,0.82-2.15c-0.08-0.2-0.36-1.02,0.08-2.12c0,0,0.67-0.21,2.2,0.82c0.64-0.18,1.32-0.27,2-0.27c0.68,0,1.36,0.09,2,0.27c1.53-1.04,2.2-0.82,2.2-0.82c0.44,1.1,0.16,1.92,0.08,2.12c0.51,0.56,0.82,1.27,0.82,2.15c0,3.07-1.87,3.75-3.65,3.95c0.29,0.25,0.54,0.73,0.54,1.48c0,1.07-0.01,1.93-0.01,2.2c0,0.21,0.15,0.46,0.55,0.38c3.19-1.11,5.32-4.11,5.32-7.48C17.83,5.76,14.33,2.25,10,2.25z" />
-                                </svg>
-                            </button>
-
-                            <button
-                                type="button"
-                                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
-                                </svg>
-                            </button>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-gray-900"
+                                placeholder="••••••••"
+                            />
                         </div>
                     </div>
 
-                    <div className="text-center text-sm">
-                        <p className="text-gray-600">
-                            Don&apos;t have an account?{' '}
-                            <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-                                Sign up for free
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <input
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                                className="h-4 w-4 text-teal-500 focus:ring-teal-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <div className="text-sm">
+                            <Link href="/forgot-password" className="font-medium text-teal-600 hover:text-teal-500">
+                                Forgot your password?
                             </Link>
-                        </p>
+                        </div>
                     </div>
+
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-3 px-4 bg-teal-500 text-white rounded-md shadow-sm hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-75 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? 'Logging in...' : 'Log in'}
+                    </button>
+                </form>
+
+                <div className="text-center text-sm mt-4">
+                    <p className="text-gray-600">
+                        Don&apos;t have an account?{' '}
+                        <Link href="/signup" className="font-medium text-teal-600 hover:text-teal-500">
+                            Sign up for free
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>

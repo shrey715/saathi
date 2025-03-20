@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
@@ -46,8 +47,8 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
+  --background: var(--color-soft-blue);
+  --foreground: var(--color-gray-800);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
@@ -83,9 +84,32 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-none;
+    font-family: var(--font-sans);
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  :root {
+    --font-sans: 'Montserrat', sans-serif;
+    --font-heading: 'Pacifico', cursive;
+    --color-soft-blue: #dbeafe;
+    --color-soft-white: #f9fafb;
+    --color-gray-800: #1f2937;
+    --color-gray-600: #4b5563;
+    --color-pastel-pink: #fbc3bc;
+    --color-pastel-yellow: #fdfd96;
+    --color-pastel-gray: #4a4a4a;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
   }
 }
