@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -49,8 +49,24 @@ const NavbarItem = ({ href, isActive, label }) => {
 };
 
 export function Footer() {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     // Get the current path from the URL
     const pathname = usePathname();
+    
+    // Public routes where footer should be hidden
+    const publicRoutes = ['/login', '/register', '/reset-password'];
+    
+    useEffect(() => {
+        // Check if the user is authenticated
+        const token = localStorage.getItem('accessToken');
+        setIsAuthenticated(!!token);
+    }, []);
+    
+    // Hide footer if user is not authenticated or if the current path is a public route
+    if (!isAuthenticated || publicRoutes.includes(pathname)) {
+        return null;
+    }
+    
     const getBasePath = (path) => {
         if (path === '/') return '/';
 

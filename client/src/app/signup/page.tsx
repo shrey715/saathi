@@ -56,6 +56,7 @@ export default function Signup() {
     };
 
     return (
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-teal-50 flex flex-col items-center justify-center text-gray-800 font-sans">
             <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
                 <div className="text-center">
                     <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto">
@@ -192,5 +193,6 @@ export default function Signup() {
                     </Link>
                 </div>
             </div>
+        </div>
     );
 }

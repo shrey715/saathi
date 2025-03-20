@@ -63,14 +63,17 @@ export default function Home() {
           <div className="flex space-x-4">
             {typeof window !== 'undefined' && localStorage.getItem('accessToken') ? (
               <button
-                onClick={() => router.push('/')}
+                onClick={() => {
+                  router.push('/');
+                  localStorage.removeItem('accessToken');
+                }}
                 className="text-sm bg-teal-500 text-white px-4 py-2 rounded-full hover:bg-teal-600 transition"
               >
                 Log Out
               </button>
             ) : (
               <>
-                <Link href="/login" className="text-sm text-teal-600 hover:underline">
+                <Link href="/login" className="text-sm text-teal-600 hover:underline py-2">
                   Log In
                 </Link>
                 <Link href="/signup" className="text-sm bg-teal-500 text-white px-4 py-2 rounded-full hover:bg-teal-600 transition">

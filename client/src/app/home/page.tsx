@@ -77,7 +77,6 @@ const HomePage = () => {
       <JourneyPath currentDay={currentDay} totalDays={totalDays} />
 
       <MobileFeatures />
-      <MobileFooter />
     </div>
   );
 };
@@ -875,31 +874,6 @@ const MobileFeatures = () => {
         ))}
       </div>
     </section>
-  );
-};
-
-// Mobile Footer Component
-const MobileFooter = () => {
-  return (
-    <footer className="bg-white border-t border-gray-200 fixed bottom-0 w-full py-2 px-4 z-10">
-      <div className="flex justify-around">
-        {[
-          { name: "Home", icon: "🏠", active: true },
-          { name: "Journal", icon: "📝", active: false },
-          { name: "Community", icon: "👥", active: false },
-          { name: "Profile", icon: "👤", active: false }
-        ].map((item, index) => (
-          <div
-            key={index}
-            className={`flex flex-col items-center ${item.active ? 'text-indigo-600' : 'text-gray-400'}`}
-          >
-            <div className="text-xl mb-1">{item.icon}</div>
-            <span className="text-xs">{item.name}</span>
-            {item.active && <div className="h-1 w-6 bg-indigo-600 rounded-full mt-1"></div>}
-          </div>
-        ))}
-      </div>
-    </footer>
   );
 };
 
