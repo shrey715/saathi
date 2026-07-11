@@ -1,6 +1,8 @@
 .NotAI
 ./.venv
 ./.env
+*.db
+*.db-journal
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

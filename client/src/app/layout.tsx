@@ -2,10 +2,8 @@
 
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-
-// Import React components at the top
-import Footer from "@/components/Footer";
+import { Toaster } from "@/components/ui/sonner";
+import { AppShell } from "@/components/nav/AppShell";
 
 export const metadata: Metadata = {
   title: "Saathi",
@@ -18,20 +16,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className="antialiased min-h-screen"
-        suppressHydrationWarning
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <main className="pb-20">{children}</main>
-        </ThemeProvider>
-        <Footer />
+    <html lang="en">
+      <body className="antialiased min-h-screen">
+        <AppShell>{children}</AppShell>
+        <Toaster richColors closeButton />
       </body>
     </html>
   );

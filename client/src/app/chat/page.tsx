@@ -9,91 +9,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
-
-// Bitmoji style expressions library - more expressive and relatable
-const characterExpressions = {
-  default: [
-    { image: "/bitmoji/happy.png", fallbackEmoji: "😊", description: "Happy" },
-    { image: "/bitmoji/listen.png", fallbackEmoji: "🤔", description: "Listening" },
-    { image: "/bitmoji/neutral.png", fallbackEmoji: "🙂", description: "Neutral" },
-    { image: "/bitmoji/excited.png", fallbackEmoji: "😄", description: "Excited" },
-  ],
-  thinking: [
-    { image: "/bitmoji/thinking.png", fallbackEmoji: "🤔", description: "Thinking" },
-    { image: "/bitmoji/curious.png", fallbackEmoji: "🧐", description: "Curious" }
-  ],
-  supportive: [
-    { image: "/bitmoji/supportive.png", fallbackEmoji: "🫂", description: "Supportive" },
-    { image: "/bitmoji/caring.png", fallbackEmoji: "❤️", description: "Caring" },
-    { image: "/bitmoji/empathy.png", fallbackEmoji: "🥺", description: "Empathetic" }
-  ],
-  celebration: [
-    { image: "/bitmoji/celebrate.png", fallbackEmoji: "🎉", description: "Celebrating" },
-    { image: "/bitmoji/cheer.png", fallbackEmoji: "🙌", description: "Cheering" }
-  ],
-  concern: [
-    { image: "/bitmoji/concerned.png", fallbackEmoji: "😟", description: "Concerned" },
-    { image: "/bitmoji/worried.png", fallbackEmoji: "😨", description: "Worried" }
-  ],
-  calm: [
-    { image: "/bitmoji/calm.png", fallbackEmoji: "😌", description: "Calm" }
-  ],
-  motivated: [
-    { image: "/bitmoji/motivated.png", fallbackEmoji: "💪", description: "Motivated" }
-  ],
-  curious: [
-    { image: "/bitmoji/curious.png", fallbackEmoji: "🧐", description: "Curious" }
-  ],
-  empathetic: [
-    { image: "/bitmoji/empathy.png", fallbackEmoji: "🥺", description: "Empathetic" }
-  ],
-  hopeful: [
-    { image: "/bitmoji/hopeful.png", fallbackEmoji: "✨", description: "Hopeful" }
-  ],
-  gentle: [
-    { image: "/bitmoji/gentle.png", fallbackEmoji: "🌸", description: "Gentle" }
-  ],
-  confident: [
-    { image: "/bitmoji/confident.png", fallbackEmoji: "😎", description: "Confident" }
-  ],
-  reflective: [
-    { image: "/bitmoji/reflective.png", fallbackEmoji: "🤔", description: "Reflective" }
-  ],
-  respectful: [
-    { image: "/bitmoji/respectful.png", fallbackEmoji: "🙏", description: "Respectful" }
-  ],
-  warm: [
-    { image: "/bitmoji/warm.png", fallbackEmoji: "☀️", description: "Warm" }
-  ]
-};
-
-// Background colors for chat bubbles
-const bubbleColors = {
-  user: "#EBF5FF",      // Light blue
-  bot: "#F9FAFB",       // Light gray
-  system: "#FFEDD5"     // Light orange
-};
-
-// Emotion-based background tint colors
-const emotionTints = {
-  default: "from-blue-50 to-indigo-50",
-  thinking: "from-purple-50 to-indigo-50",
-  supportive: "from-green-50 to-emerald-50",
-  celebration: "from-yellow-50 to-amber-50",
-  concern: "from-red-50 to-pink-50",
-  calm: "from-blue-50 to-cyan-50",
-  motivated: "from-orange-50 to-amber-50",
-  curious: "from-violet-50 to-purple-50",
-  empathetic: "from-rose-50 to-pink-50",
-  hopeful: "from-emerald-50 to-green-50",
-  gentle: "from-pink-50 to-rose-50",
-  confident: "from-amber-50 to-yellow-50",
-  reflective: "from-slate-50 to-gray-50",
-  respectful: "from-indigo-50 to-blue-50",
-  warm: "from-orange-50 to-yellow-50"
-};
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { chatApi } from '@/lib/api';
+import { getEmotionIcon, getEmotionTone } from '@/lib/emotion-icons';
+import { useMood } from '@/lib/mood-context';
+import { toneClasses } from '@/lib/mood-tone';
 
 // Common mental health topics users might want to explore
 const suggestedTopics = [
@@ -125,185 +46,54 @@ const fillerMessages = {
   ]
 };
 
+interface ChatMessage {
+  id: number;
+  sender: 'user' | 'saathi' | 'system';
+  content: string;
+  timestamp: string;
+  expression: string;
+}
+
+const greetingMessage = (): ChatMessage => ({
+  id: Date.now(),
+  sender: 'saathi',
+  content: fillerMessages.greeting[Math.floor(Math.random() * fillerMessages.greeting.length)],
+  timestamp: new Date().toISOString(),
+  expression: "default",
+});
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'saathi',
-      content: fillerMessages.greeting[Math.floor(Math.random() * fillerMessages.greeting.length)],
-      timestamp: new Date().toISOString(),
-      expression: "default"
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([{ ...greetingMessage(), id: 1 }]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
-  const [currentExpression, setCurrentExpression] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [inCrisisMode, setInCrisisMode] = useState(false);
-  const [previousMessages, setPreviousMessages] = useState<{
-    id: number;
-    sender: string;
-    content: string;
-    timestamp: string;
-    expression: string;
-  }[]>([]);
+  const [previousMessages, setPreviousMessages] = useState<ChatMessage[]>([]);
   const [isResettingChat, setIsResettingChat] = useState(false);
-  const [token, setToken] = useState('');
   const [currentEmotion, setCurrentEmotion] = useState('default');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const [footerHeight, setFooterHeight] = useState(70); // default estimation
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const router = useRouter();
-
-  // Check authentication before showing content
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          console.log('No authentication token found, redirecting to login');
-          router.push('/login');
-          return;
-        }
-
-        // Verify the token with a request to the backend
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/get-user-details';
-        const response = await fetch(backendUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          console.log('Authentication failed, redirecting to login');
-          router.push('/login');
-          return;
-        }
-
-        const userData = await response.json();
-        setUser(userData);
-        setToken(token);
-
-        // Initialize chat with greeting message
-        setMessages([
-          {
-            id: 1,
-            sender: 'saathi',
-            content: fillerMessages.greeting[Math.floor(Math.random() * fillerMessages.greeting.length)],
-            timestamp: new Date().toISOString(),
-            expression: "default"
-          }
-        ]);
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Authentication check error:', error);
-        router.push('/login');
-      }
-    };
-
-    checkAuth();
-  }, [router]);
-
-  useEffect(() => {
-    console.log("Current emotion updated:", currentEmotion);
-    console.log("Current emotion tint:", emotionTints[currentEmotion]);
-  }, [currentEmotion]);
-
+  const { isLoading } = useAuthGuard();
+  const { setMood } = useMood();
 
   // Scroll to bottom when messages change
   useEffect(() => {
     if (isLoading) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  // Format timestamp to readable time
-  const formatTime = (timestamp) => {
+  const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Periodically change Saathi's expression for a more dynamic feel
-  useEffect(() => {
-    if (isLoading) return;
-    const expressionInterval = setInterval(() => {
-      if (messages.length > 0 && !isTyping) {
-        const expressionType = messages[messages.length - 1].expression || "default";
-        const expressionsOfType = characterExpressions[expressionType] || characterExpressions.default;
-        const newExpression = Math.floor(Math.random() * expressionsOfType.length);
-        setCurrentExpression(newExpression);
-      }
-    }, 8000);
-
-    return () => clearInterval(expressionInterval);
-  }, [messages, isTyping]);
-
-  // Measure the actual footer height
-  useEffect(() => {
-    if (isLoading) return;
-    const footer = document.querySelector('footer');
-
-    const updateFooterHeight = () => {
-      if (footer) {
-        const footerRect = footer.getBoundingClientRect();
-        setFooterHeight(footerRect.height + 16); // Add some padding
-      }
-    };
-
-    // Initial measurement
-    updateFooterHeight();
-
-    // Re-measure on resize
-    window.addEventListener('resize', updateFooterHeight);
-
-    // Setup a mutation observer to detect DOM changes that might affect footer
-    const resizeObserver = new ResizeObserver(() => {
-      updateFooterHeight();
-    });
-
-    if (footer) {
-      resizeObserver.observe(footer);
-    }
-
-    return () => {
-      window.removeEventListener('resize', updateFooterHeight);
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  // Function to send chat message to the server
-  const sendMessageToServer = async (message) => {
+  const sendMessageToServer = async (message: string) => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/chat';
-      const response = await fetch(backendUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ message })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Server response:", data); // Debug the server response
-      console.log("Emotion received from backend:", data.emotion); // Log the specific emotion
-
-      // Return both the response text and emotion
-      return data;
+      return await chatApi.send(message);
     } catch (error) {
       console.error('Error sending message to server:', error);
-      setCurrentEmotion('concern'); // Set emotion to concern on error
+      setCurrentEmotion('concern');
       return {
         response: fillerMessages.error[Math.floor(Math.random() * fillerMessages.error.length)],
         emotion: 'concern'
@@ -311,36 +101,17 @@ export default function ChatPage() {
     }
   };
 
-  // Reset the chat thread
   const resetChatThread = async () => {
     setIsResettingChat(true);
     try {
-      const response = await fetch('http://localhost:8000/api/reset-chat', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Reset the UI
-      setMessages([{
-        id: Date.now(),
-        sender: 'saathi',
-        content: fillerMessages.greeting[Math.floor(Math.random() * fillerMessages.greeting.length)],
-        timestamp: new Date().toISOString(),
-        expression: "default"
-      }]);
+      await chatApi.reset();
+      setMessages([greetingMessage()]);
       setShowSuggestions(true);
       setInCrisisMode(false);
       setPreviousMessages([]);
       setCurrentEmotion('default');
     } catch (error) {
       console.error('Error resetting chat thread:', error);
-      // Add error message to chat
       setMessages(prev => [...prev, {
         id: Date.now(),
         sender: 'system',
@@ -358,54 +129,42 @@ export default function ChatPage() {
     const content = suggestedMessage || inputMessage;
     if (content.trim() === '') return;
 
-    // Add user message
-    const userMessage = {
+    const userMessage: ChatMessage = {
       id: Date.now(),
       sender: 'user',
-      content: content,
+      content,
       timestamp: new Date().toISOString(),
-      expression: "default" // Add the required expression property
+      expression: "default"
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
-    setShowSuggestions(false); // Hide suggestions after user sends a message
+    setShowSuggestions(false);
 
     try {
-      // Send message to server - now returns { response, emotion }
       const data = await sendMessageToServer(content);
-
-      // Extract the emotion from the response and update state
       const messageEmotion = data.emotion || 'default';
       setCurrentEmotion(messageEmotion);
+      setMood(messageEmotion, getEmotionTone(messageEmotion));
 
-      console.log("Setting emotion to:", messageEmotion);
-
-      // Add AI response with correct emotion
-      const aiMessage = {
+      setMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'saathi',
         content: data.response,
         timestamp: new Date().toISOString(),
         expression: messageEmotion
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
+      }]);
     } catch (error) {
       console.error('Error in chat conversation:', error);
-
-      // Add error message
-      const errorMessage = {
+      setMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'saathi',
         content: fillerMessages.error[Math.floor(Math.random() * fillerMessages.error.length)],
         timestamp: new Date().toISOString(),
         expression: "concern"
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-      setCurrentEmotion('concern'); // Update emotion for error state
+      }]);
+      setCurrentEmotion('concern');
     } finally {
       setIsTyping(false);
     }
@@ -413,138 +172,99 @@ export default function ChatPage() {
 
   const handleCrisisMode = async () => {
     setInCrisisMode(true);
-
-    // Store current conversation state
     setPreviousMessages([...messages]);
-    // Add system message about entering crisis mode
-    const systemMessage = {
+    setMessages([{
       id: Date.now(),
       sender: 'system',
       content: "Crisis support activated. If you're in immediate danger, please call emergency services (911) or text HOME to 741741 to reach Crisis Text Line.",
       timestamp: new Date().toISOString(),
       expression: "concern"
-    };
+    }]);
 
-    setMessages([systemMessage]);
-
-    // Reset the chat thread on the server
     await resetChatThread();
 
-    // Add bot message with crisis support
-    const botMessage = {
+    setMessages(prev => [...prev, {
       id: Date.now() + 1,
       sender: 'saathi',
       content: "I notice you've activated crisis support. I'm here for you. Can you tell me a bit about what's going on right now so I can best support you?",
       timestamp: new Date().toISOString(),
       expression: "concern"
-    };
-
-    setMessages(prev => [...prev, botMessage]);
+    }]);
     setCurrentEmotion('concern');
   };
 
   const exitCrisisMode = async () => {
     setInCrisisMode(false);
-
-    // Reset the chat thread on the server
     await resetChatThread();
 
-    // Restore previous conversation or start fresh
     if (previousMessages.length > 0) {
       setMessages([...previousMessages]);
     } else {
-      // Start fresh with a greeting
-      setMessages([{
-        id: Date.now(),
-        sender: 'saathi',
-        content: fillerMessages.greeting[Math.floor(Math.random() * fillerMessages.greeting.length)],
-        timestamp: new Date().toISOString(),
-        expression: "default"
-      }]);
+      setMessages([greetingMessage()]);
     }
     setCurrentEmotion('default');
   };
 
-  // Get current expression data
-  const getCurrentExpression = () => {
-    const expressionType = currentEmotion || "default";
-    const expressionsOfType = characterExpressions[expressionType] || characterExpressions.default;
-    return expressionsOfType[currentExpression % expressionsOfType.length];
-  };
+  const CurrentEmotionIcon = getEmotionIcon(currentEmotion);
+  const emotionTone = toneClasses(getEmotionTone(currentEmotion));
 
-  const currentExpressionData = getCurrentExpression();
-  // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-indigo-400 border-t-indigo-200 rounded-full animate-spin"></div>
-        <p className="mt-4 text-indigo-600 font-medium">Preparing Saathi for your chat...</p>
+      <div className="h-full flex flex-col items-center justify-center bg-background">
+        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        <p className="mt-4 text-muted-foreground font-medium">Preparing Saathi for your chat...</p>
       </div>
     );
   }
+
   return (
-    <div className={`h-screen flex flex-col bg-gradient-to-br ${emotionTints[currentEmotion]} overflow-hidden`}>
+    <div className="h-full flex flex-col bg-background">
       {/* Header */}
-      <div className="fixed h-16 top-0 left-0 right-0 z-20 px-4 py-3 flex items-center justify-between bg-white shadow-sm">
+      <div className="shrink-0 px-4 py-3 flex items-center justify-between bg-card/80 backdrop-blur border-b border-border">
         <div className="flex items-center">
           {inCrisisMode && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mr-1 text-gray-700"
-              onClick={exitCrisisMode}
-            >
+            <Button variant="ghost" size="icon" className="mr-1" onClick={exitCrisisMode}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           <div className="flex items-center">
-            <div
-              className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-2 overflow-hidden"
-            >
-              <motion.span
-                className="text-lg"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                {currentExpressionData.fallbackEmoji}
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-2 ${emotionTone.soft} ${emotionTone.text}`}>
+              <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity }}>
+                <CurrentEmotionIcon className="h-5 w-5" />
               </motion.span>
             </div>
             <div>
-              <h1 className="font-bold text-gray-800">
+              <h1 className="font-bold text-foreground">
                 Saathi
-                {inCrisisMode && <span className="text-xs ml-2 text-red-500 font-normal">Crisis Mode</span>}
+                {inCrisisMode && <span className="text-xs ml-2 text-destructive font-normal">Crisis Mode</span>}
               </h1>
-              <p className="text-xs text-gray-500">Your wellness companion</p>
+              <p className="text-xs text-muted-foreground">Your wellness companion</p>
             </div>
           </div>
         </div>
 
-        {/* Reset button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={resetChatThread}
-          disabled={isResettingChat}
-          className="text-gray-500 hover:text-indigo-600"
-        >
-          <RefreshCw className={`h-4 w-4 mr-1 ${isResettingChat ? 'animate-spin' : ''}`} />
-          {isResettingChat ? 'Resetting...' : 'New Chat'}
-        </Button>
-
-        {inCrisisMode && (
-          <div className="text-sm text-red-500 font-medium animate-pulse">
-            Crisis Support Active
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {inCrisisMode && (
+            <div className="hidden sm:block text-sm text-destructive font-medium animate-pulse">
+              Crisis Support Active
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetChatThread}
+            disabled={isResettingChat}
+            className="text-muted-foreground hover:text-primary"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isResettingChat ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isResettingChat ? 'Resetting...' : 'New Chat'}</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Main Chat Area - Adjust this container to account for fixed bottom bar */}
-      <div
-        ref={chatContainerRef}
-        className="relative z-10 pt-16 pb-20 flex-grow flex flex-col overflow-hidden bg-white/40"
-      >
-        {/* Messages container */}
-        <div className="p-4 space-y-3 overflow-y-auto">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto p-4 space-y-3">
           <AnimatePresence mode="popLayout">
             {messages.map((message) => (
               <motion.div
@@ -556,48 +276,40 @@ export default function ChatPage() {
               >
                 {message.sender === 'system' ? (
                   <motion.div
-                    className="bg-amber-50 p-3 rounded-lg max-w-md shadow-sm border border-amber-100"
+                    className="bg-mood-alert-soft p-3 rounded-lg max-w-md shadow-neu-sm border border-mood-alert/20"
                     whileHover={{ scale: 1.01 }}
-                    style={{ backgroundColor: bubbleColors.system }}
                   >
-                    <p className="text-gray-800 text-sm">{message.content}</p>
+                    <p className="text-foreground text-sm">{message.content}</p>
                   </motion.div>
                 ) : message.sender === 'user' ? (
                   <motion.div
-                    className="bg-blue-50 p-3 rounded-2xl rounded-tr-sm max-w-xs sm:max-w-md shadow-sm"
+                    className="bg-primary/10 p-3 rounded-2xl rounded-tr-sm max-w-xs sm:max-w-md shadow-neu-sm"
                     whileHover={{ scale: 1.01 }}
-                    style={{ backgroundColor: bubbleColors.user }}
                   >
-                    <p className="text-gray-800">{message.content}</p>
+                    <p className="text-foreground">{message.content}</p>
                     <div className="mt-1 text-right">
-                      <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
+                      <span className="text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>
                     </div>
                   </motion.div>
                 ) : (
                   <div className="flex group max-w-xs sm:max-w-md">
-                    <div
-                      className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-2 mt-1 overflow-hidden"
-                      style={{ padding: "0.25rem" }}
-                    >
-                      <motion.span
-                        className="text-lg p-0.5"
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        {/* Show expression from message */}
-                        {(characterExpressions[message.expression] || characterExpressions.default)[0].fallbackEmoji}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-2 mt-1 p-1.5 shrink-0 ${toneClasses(getEmotionTone(message.expression)).soft} ${toneClasses(getEmotionTone(message.expression)).text}`}>
+                      <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                        {(() => {
+                          const MessageIcon = getEmotionIcon(message.expression);
+                          return <MessageIcon className="h-5 w-5" />;
+                        })()}
                       </motion.span>
                     </div>
                     <motion.div
-                      className="bg-white border border-gray-100 p-3 rounded-2xl rounded-tl-sm shadow-sm"
+                      className="bg-card p-3 rounded-2xl rounded-tl-sm shadow-neu-sm"
                       whileHover={{ scale: 1.01 }}
-                      style={{ backgroundColor: bubbleColors.bot }}
                     >
-                      <div className="text-gray-800">
+                      <div className="text-foreground text-sm leading-relaxed">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                       <div className="mt-1 flex justify-between items-center">
-                        <span className="text-xs text-gray-400">{formatTime(message.timestamp)}</span>
+                        <span className="text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>
                       </div>
                     </motion.div>
                   </div>
@@ -611,15 +323,15 @@ export default function ChatPage() {
 
         {/* Suggested topics - only shown at start of conversation */}
         {showSuggestions && messages.length < 3 && !isTyping && (
-          <div className="px-4 pb-4 pt-1">
-            <p className="text-sm text-gray-500 mb-2 ml-1">Suggested topics:</p>
+          <div className="max-w-2xl mx-auto px-4 pb-4 pt-1">
+            <p className="text-sm text-muted-foreground mb-2 ml-1">Suggested topics:</p>
             <div className="flex flex-wrap gap-2">
               {suggestedTopics.slice(0, 4).map((topic, index) => (
                 <Button
                   key={index}
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-gray-200 text-gray-700 hover:bg-gray-50 text-xs whitespace-normal text-left justify-start"
+                  className="rounded-full text-xs whitespace-normal text-left justify-start"
                   onClick={(e) => sendMessage(e, topic)}
                 >
                   {topic}
@@ -630,14 +342,14 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Message input - Fixed at the bottom of screen */}
-      <div className="fixed bottom-20 left-0 right-0 p-3 bg-white/80 backdrop-blur-sm z-20 border-t border-gray-100">
-        <form onSubmit={sendMessage} className="flex items-center space-x-2">
+      {/* Message input */}
+      <div className="shrink-0 relative p-3 bg-card/80 backdrop-blur border-t border-border">
+        <form onSubmit={sendMessage} className="max-w-2xl mx-auto flex items-center space-x-2">
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-indigo-600 rounded-full hover:bg-indigo-50"
+            className="text-muted-foreground hover:text-primary rounded-full"
             onClick={() => setShowToolbar(!showToolbar)}
           >
             <Smile className="h-5 w-5" />
@@ -650,7 +362,7 @@ export default function ChatPage() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder={inCrisisMode ? "Share how you're feeling..." : "Message Saathi..."}
-              className="w-full p-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 pl-4 pr-4 bg-gray-50/80 text-gray-500"
+              className="w-full p-3 rounded-full border-transparent shadow-neu-inset focus:outline-none focus:ring-2 focus:ring-ring pl-4 pr-4 bg-muted/50 text-foreground"
               autoFocus
             />
           </div>
@@ -658,7 +370,6 @@ export default function ChatPage() {
           <Button
             type="submit"
             size="icon"
-            className="rounded-full bg-indigo-600 text-white shadow-md hover:bg-indigo-700"
             disabled={inputMessage.trim() === '' || isTyping}
           >
             <Send className="h-5 w-5" />
@@ -672,7 +383,7 @@ export default function ChatPage() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="absolute bottom-full left-2 right-2 bg-white rounded-lg shadow-lg border border-gray-200 mb-2 overflow-hidden"
+              className="absolute bottom-full left-2 right-2 max-w-2xl mx-auto bg-popover rounded-lg shadow-lg border border-border mb-2 overflow-hidden"
             >
               <div className="p-2">
                 <div className="grid grid-cols-8 gap-1">
@@ -680,7 +391,7 @@ export default function ChatPage() {
                     "😠", "😩", "🤗", "🙂", "🫤", "😔", "😬", "🫠"].map((emoji) => (
                       <button
                         key={emoji}
-                        className="p-2 hover:bg-gray-100 rounded-lg text-xl"
+                        className="p-2 hover:bg-accent rounded-lg text-xl"
                         onClick={() => {
                           setInputMessage(prev => prev + emoji);
                           setShowToolbar(false);

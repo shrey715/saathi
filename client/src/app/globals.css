@@ -1,15 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
 
-@custom-variant dark (&:is(.dark *));
+/*
+ * Design system overview
+ * -----------------------
+ * Fixed light theme — no dark mode. One set of tokens, defined once below.
+ *
+ * Two layers of color:
+ *   1. Chrome tokens (background, foreground, card, primary, border, ...) —
+ *      the app's neutral shell + single brand accent (indigo). Used for nav,
+ *      buttons, cards, text — everywhere, on every page.
+ *   2. Mood tokens (--color-mood-*) — a small fixed palette used wherever a
+ *      mood/emotion/category is being represented (the ambient shell wash,
+ *      chat background tint, mood badges, journal tags, resource
+ *      categories). Hues are chosen for their effect on the viewer, not
+ *      literal association — e.g. "sad" gets a warm comforting orange
+ *      rather than a cold blue, "anxious" gets a calming teal rather than
+ *      an alarming red/orange. Every page pulls these from the shared maps
+ *      in src/lib/*-icons.tsx — never hardcode a mood color inline.
+ */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans-stack);
+  --font-display: var(--font-display-stack);
   --font-mono: var(--font-geist-mono);
+
+  /* Soft elevation shadows — see --neu-shadow-* below for why these are
+     single-direction drops rather than skeuomorphic light/dark pairs. */
+  --shadow-neu-sm: var(--neu-shadow-sm);
+  --shadow-neu-md: var(--neu-shadow-md);
+  --shadow-neu-lg: var(--neu-shadow-lg);
+  --shadow-neu-inset: var(--neu-shadow-inset);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -18,11 +44,13 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -40,46 +68,104 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Mood palette — soft (background tint) + DEFAULT (icon/text/border) per tone */
+  --color-mood-calm: var(--mood-calm);
+  --color-mood-calm-soft: var(--mood-calm-soft);
+  --color-mood-joy: var(--mood-joy);
+  --color-mood-joy-soft: var(--mood-joy-soft);
+  --color-mood-focus: var(--mood-focus);
+  --color-mood-focus-soft: var(--mood-focus-soft);
+  --color-mood-tender: var(--mood-tender);
+  --color-mood-tender-soft: var(--mood-tender-soft);
+  --color-mood-alert: var(--mood-alert);
+  --color-mood-alert-soft: var(--mood-alert-soft);
+  --color-mood-growth: var(--mood-growth);
+  --color-mood-growth-soft: var(--mood-growth-soft);
+  --color-mood-neutral: var(--mood-neutral);
+  --color-mood-neutral-soft: var(--mood-neutral-soft);
 }
 
 :root {
-  --background: var(--color-soft-blue);
-  --foreground: var(--color-gray-800);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  --font-sans-stack: 'Montserrat', sans-serif;
+  /* Playful, rounded, bold — used only for headlines/display text via the
+     `font-display` utility, never for body copy (stays on font-sans). */
+  --font-display-stack: 'Baloo 2', 'Montserrat', sans-serif;
+
+  /* Soft single-direction elevation, not skeuomorphic emboss — a two-tone
+     light/dark shadow pair only reads as "smooth" over a flat, static
+     background. Ours is a live mood-colored gradient, so shadows here are
+     just soft, low-contrast, large-blur drops that composite cleanly over
+     any color underneath. */
+  --neu-shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.06), 0 3px 10px rgba(24, 24, 27, 0.07);
+  --neu-shadow-md: 0 2px 6px rgba(24, 24, 27, 0.06), 0 10px 28px rgba(24, 24, 27, 0.09);
+  --neu-shadow-lg: 0 8px 16px rgba(24, 24, 27, 0.08), 0 24px 56px rgba(24, 24, 27, 0.12);
+  --neu-shadow-inset: inset 0 1px 3px rgba(24, 24, 27, 0.09), inset 0 2px 8px rgba(24, 24, 27, 0.06);
+
+  --background: var(--color-white);
+  --foreground: var(--color-zinc-900);
+  --card: var(--color-white);
+  --card-foreground: var(--color-zinc-900);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-zinc-900);
+
+  --primary: var(--color-indigo-600);
+  --primary-foreground: var(--color-indigo-50);
+  --secondary: var(--color-zinc-100);
+  --secondary-foreground: var(--color-zinc-900);
+  --muted: var(--color-zinc-100);
+  --muted-foreground: var(--color-zinc-500);
+  --accent: var(--color-indigo-50);
+  --accent-foreground: var(--color-indigo-700);
+  --destructive: var(--color-red-600);
+  --destructive-foreground: var(--color-red-50);
+
+  --border: var(--color-zinc-200);
+  --input: var(--color-zinc-200);
+  --ring: var(--color-indigo-400);
+
+  --chart-1: var(--color-indigo-500);
+  --chart-2: var(--color-emerald-500);
+  --chart-3: var(--color-amber-500);
+  --chart-4: var(--color-rose-500);
+  --chart-5: var(--color-sky-500);
+
+  --radius: 0.75rem;
+
+  --sidebar: var(--color-white);
+  --sidebar-foreground: var(--color-zinc-900);
+  --sidebar-primary: var(--color-indigo-600);
+  --sidebar-primary-foreground: var(--color-indigo-50);
+  --sidebar-accent: var(--color-indigo-50);
+  --sidebar-accent-foreground: var(--color-indigo-700);
+  --sidebar-border: var(--color-zinc-200);
+  --sidebar-ring: var(--color-indigo-400);
+
+  /* Muted, pastel-leaning hues — hand-picked rather than pulled from
+     Tailwind's default shade steps, which don't hit "soft and desaturated"
+     at any single step usable both as a full-bleed flat canvas AND with
+     white text on top. Each is chosen for effect on the viewer, not
+     literal association (see file header). -soft variants are a light
+     tint of the same hue for badges/icon-wells on white/card surfaces. */
+  --mood-calm: #5E88A0;       /* peaceful: dusty blue */
+  --mood-calm-soft: #DCE8ED;
+  --mood-joy: #C99A42;        /* happy: muted gold */
+  --mood-joy-soft: #F3E4C2;
+  --mood-focus: #7B6FAE;      /* reflective: muted lavender */
+  --mood-focus-soft: #E4E0F1;
+  --mood-tender: #CC7550;     /* sad: warm terracotta — comfort, not cold */
+  --mood-tender-soft: #F3DDD1;
+  --mood-alert: #5F9682;      /* anxious: muted sage teal — calms, doesn't alarm */
+  --mood-alert-soft: #DCEAE2;
+  --mood-growth: #6D9550;     /* proud: muted sage green */
+  --mood-growth-soft: #E1EAD6;
+  --mood-neutral: #6E5A47;    /* tired: warm muted brown, grounding */
+  --mood-neutral-soft: #E4DCD2;
 }
 
 @layer base {
@@ -88,20 +174,12 @@
     font-family: var(--font-sans);
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html {
+    scroll-behavior: smooth;
   }
 
-  :root {
-    --font-sans: 'Montserrat', sans-serif;
-    --font-heading: 'Pacifico', cursive;
-    --color-soft-blue: #dbeafe;
-    --color-soft-white: #f9fafb;
-    --color-gray-800: #1f2937;
-    --color-gray-600: #4b5563;
-    --color-pastel-pink: #fbc3bc;
-    --color-pastel-yellow: #fdfd96;
-    --color-pastel-gray: #4a4a4a;
+  body {
+    @apply bg-background text-foreground;
   }
 
   h1,
@@ -110,6 +188,38 @@
   h4,
   h5,
   h6 {
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Every mood/theme change repaints backgrounds, borders and shadows
+     across the shell — without a shared easing default those repaints
+     snap instead of settling, which is most of what reads as "rugged".
+     Framer Motion elements already animate their own props and are
+     unaffected by a CSS color/shadow transition. */
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  [class*="rounded"] {
+    transition-property: background-color, border-color, color, box-shadow, opacity;
+    transition-duration: 260ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer utilities {
+  /* Neumorphic "molded" surface — swap in wherever a flat bordered card
+     feels too corporate. Pairs with rounded-2xl/rounded-3xl; the shadow
+     itself already implies an edge, so an explicit border fights it. */
+  .neu-raised {
+    box-shadow: var(--shadow-neu-md);
+    border-color: transparent;
+  }
+  .neu-inset {
+    box-shadow: var(--shadow-neu-inset);
+    border-color: transparent;
   }
 }

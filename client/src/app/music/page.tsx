@@ -1,79 +1,79 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 import {
   Play, Pause, SkipBack, SkipForward,
   Volume2, VolumeX, Repeat, Shuffle, Heart,
-  Share2, ListMusic, Waves, Music2
+  ListMusic, Music2,
+  BookOpen, Flower2, Wind, type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { type MoodTone, moodTint, moodVar } from "@/lib/mood-tone";
 
 // Music data from props or imported
-const musicData = [
-
+const musicData: {
+  id: number;
+  title: string;
+  artist: string;
+  tone: MoodTone;
+  file: string;
+  duration: number;
+  category: string;
+  icon: LucideIcon;
+}[] = [
   {
     id: 0,
     title: "Lofi Study",
     artist: "Chill_Beats",
-    cover: "none",
-    coverColor: "#6ED2EE", // Light blue
+    tone: "focus",
     file: "/assets/stock_music/lofi-background-music-2-309039.mp3",
     duration: 98,
     category: "Focus",
-    colorKey: "primary",
-    emoji: "📚"
+    icon: BookOpen
   },
   {
     id: 1,
     title: "Path to Harmony",
     artist: "Grand_Project",
-    cover: "none",
-    coverColor: "#8A6FE8", // Lighter purple
+    tone: "calm",
     file: "/assets/stock_music/path-to-harmony-313385.mp3",
     duration: 633,
     category: "Meditation",
-    colorKey: "primary",
-    emoji: "🧘‍♀️"
+    icon: Wind
   },
   {
     id: 2,
     title: "Pure Love",
     artist: "Top-Flow",
-    cover: "none",
-    coverColor: "#FFA500", // Lighter orange
+    tone: "tender",
     file: "/assets/stock_music/pure-love-304010.mp3",
     duration: 78,
     category: "Romantic",
-    colorKey: "primary",
-    emoji: "❤️"
+    icon: Heart
   },
   {
     id: 3,
     title: "Zen Garden",
     artist: "Grand_Project",
-    cover: "none",
-    coverColor: "#00BFFF", // Lighter blue
+    tone: "growth",
     file: "/assets/stock_music/zen-garden-310599.mp3",
     duration: 624,
     category: "Meditation",
-    colorKey: "primary",
-    emoji: "🌸"
+    icon: Flower2
   },
   {
     id: 4,
     title: "Relaxing Piano",
     artist: "Grand_Project",
-    cover: "none",
-    coverColor: "#FF6347", // Lighter red
+    tone: "joy",
     file: "/assets/stock_music/relaxing-piano-310597.mp3",
     duration: 226,
     category: "Meditation",
-    colorKey: "primary",
-    emoji: "🎹"
+    icon: Music2
   }
 ];
 
@@ -87,50 +87,8 @@ const MusicPlayerPage = () => {
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const router = useRouter();
-
-  // Authentication check
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          console.log('No authentication token found, redirecting to login');
-          router.push('/login');
-          return;
-        }
-
-        // Verify token validity with a backend request
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL + '/api/get-user-details';
-        const response = await fetch(backendUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          console.log('Authentication failed, redirecting to login');
-          router.push('/login');
-          return;
-        }
-
-        const userData = await response.json();
-        setUser(userData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Authentication check error:', error);
-        router.push('/login');
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+  const { isLoading } = useAuthGuard();
 
   // Get current track from index
   const currentTrack = musicData[currentTrackIndex];
@@ -139,7 +97,7 @@ const MusicPlayerPage = () => {
   const isFavorite = favorites.includes(currentTrack.id);
 
   // Format time in MM:SS
-  const formatTime = (time) => {
+  const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
@@ -295,7 +253,7 @@ const MusicPlayerPage = () => {
   }, [currentTrackIndex, isLoading]);
 
   // Animation variants
-  const coverVariants = {
+  const coverVariants: Variants = {
     playing: {
       rotate: 360,
       transition: {
@@ -315,17 +273,20 @@ const MusicPlayerPage = () => {
   // Loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-indigo-400 border-t-indigo-200 rounded-full animate-spin"></div>
-        <p className="mt-4 text-indigo-600 font-medium">Preparing your music...</p>
+      <div className="min-h-full bg-background flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        <p className="mt-4 text-muted-foreground font-medium">Preparing your music...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 overflow-hidden">
+    <div
+      className="flex flex-col items-center justify-center min-h-full p-4 transition-colors duration-700"
+      style={{ backgroundColor: moodTint(currentTrack.tone, 30) }}
+    >
       <div className="w-full max-w-xl">
-        <Card className="p-6 shadow-lg backdrop-blur-sm bg-card/90 rounded-xl border border-border/50">
+        <Card className="p-6 shadow-neu-lg backdrop-blur-sm bg-card/90 rounded-2xl">
           <div className="flex flex-col gap-6">
             {/* Audio element */}
             <audio
@@ -337,12 +298,12 @@ const MusicPlayerPage = () => {
             {/* Cover and track info */}
             <div className="flex flex-col items-center gap-6">
               <motion.div
-                className="w-56 h-56 rounded-full flex items-center justify-center text-6xl shadow-lg"
-                style={{ backgroundColor: currentTrack.coverColor }}
+                className="w-56 h-56 rounded-full flex items-center justify-center shadow-lg text-white"
+                style={{ backgroundColor: moodVar(currentTrack.tone) }}
                 animate={isPlaying ? "playing" : "paused"}
                 variants={coverVariants}
               >
-                <span>{currentTrack.emoji}</span>
+                <currentTrack.icon className="h-20 w-20" />
               </motion.div>
 
               <div className="text-center">
@@ -467,7 +428,7 @@ const MusicPlayerPage = () => {
               exit={{ opacity: 0, y: 20 }}
               className="mt-4"
             >
-              <Card className="p-4 shadow-lg backdrop-blur-sm bg-card/90 rounded-xl border border-border/50">
+              <Card className="p-4 shadow-neu-lg backdrop-blur-sm bg-card/90 rounded-2xl">
                 <h3 className="font-medium mb-3 flex items-center gap-2">
                   <Music2 size={16} />
                   Playlist ({musicData.length} tracks)
@@ -483,10 +444,10 @@ const MusicPlayerPage = () => {
                       )}
                     >
                       <div
-                        className="w-10 h-10 rounded-md flex items-center justify-center mr-3"
-                        style={{ backgroundColor: track.coverColor }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center mr-3 text-white shadow-neu-sm"
+                        style={{ backgroundColor: moodVar(track.tone) }}
                       >
-                        <span>{track.emoji}</span>
+                        <track.icon className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">{track.title}</p>

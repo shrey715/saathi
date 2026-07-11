@@ -1,82 +1,129 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import Head from 'next/head';
-import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  MessageCircle,
+  Sparkles,
+  LifeBuoy,
+  UserPlus,
+  Sprout,
+  GraduationCap,
+  Code2,
+  Stethoscope,
+  type LucideIcon,
+} from "lucide-react";
+
+import { MoodFace } from "@/components/MoodFace";
+import { type MoodTone, toneClasses } from "@/lib/mood-tone";
+
+const features: { title: string; description: string; icon: LucideIcon; tone: MoodTone }[] = [
+  {
+    title: "Empathetic Conversations",
+    description: "Chat with an AI that listens and responds with care and understanding.",
+    icon: MessageCircle,
+    tone: "tender",
+  },
+  {
+    title: "Personalized Guidance",
+    description: "Receive tailored advice and exercises for your mental well-being.",
+    icon: Sparkles,
+    tone: "joy",
+  },
+  {
+    title: "Crisis Support",
+    description: "Access immediate help and calming techniques during tough times.",
+    icon: LifeBuoy,
+    tone: "alert",
+  },
+];
+
+const steps: { title: string; description: string; icon: LucideIcon; tone: MoodTone }[] = [
+  {
+    title: "Sign Up",
+    description: "Create your account in minutes. Tell us a bit about yourself so we can personalize your experience.",
+    icon: UserPlus,
+    tone: "growth",
+  },
+  {
+    title: "Connect",
+    description: "Chat with Saathi anytime. Share your thoughts, feelings, or concerns in a safe, judgment-free space.",
+    icon: MessageCircle,
+    tone: "calm",
+  },
+  {
+    title: "Grow",
+    description: "Track your progress and develop healthy mental habits with personalized exercises and insights.",
+    icon: Sprout,
+    tone: "focus",
+  },
+];
+
+const testimonials: { name: string; role: string; feedback: string; icon: LucideIcon; tone: MoodTone }[] = [
+  {
+    name: "Priya K.",
+    role: "Student",
+    feedback: "Saathi has been a lifesaver during exam stress. The guided breathing exercises are amazing!",
+    icon: GraduationCap,
+    tone: "focus",
+  },
+  {
+    name: "Rahul M.",
+    role: "Software Developer",
+    feedback: "I love how Saathi helps me reflect on my emotions. It's like journaling but better!",
+    icon: Code2,
+    tone: "calm",
+  },
+  {
+    name: "Anjali S.",
+    role: "Healthcare Professional",
+    feedback: "The crisis support feature is so comforting during tough days. Highly recommend it!",
+    icon: Stethoscope,
+    tone: "tender",
+  },
+];
 
 export default function Home() {
   const router = useRouter();
-  const [activeFeature, setActiveFeature] = useState(-1);
+  const [isAuthed, setIsAuthed] = useState(false);
 
-  const features = [
-    {
-      title: "Empathetic Conversations",
-      description: "Chat with an AI that listens and responds with care and understanding.",
-      icon: "💬",
-    },
-    {
-      title: "Personalized Guidance",
-      description: "Receive tailored advice and exercises for your mental well-being.",
-      icon: "🌟",
-    },
-    {
-      title: "Crisis Support",
-      description: "Access immediate help and calming techniques during tough times.",
-      icon: "🛟",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Priya K.",
-      role: "Student",
-      feedback: "Saathi has been a lifesaver during exam stress. The guided breathing exercises are amazing!",
-      icon: "📚",
-    },
-    {
-      name: "Rahul M.",
-      role: "Software Developer",
-      feedback: "I love how Saathi helps me reflect on my emotions. It's like journaling but better!",
-      icon: "💻",
-    },
-    {
-      name: "Anjali S.",
-      role: "Healthcare Professional",
-      feedback: "The crisis support feature is so comforting during tough days. Highly recommend it!",
-      icon: "🩺",
-    },
-  ];
+  useEffect(() => {
+    setIsAuthed(Boolean(localStorage.getItem("accessToken")));
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-teal-50 text-gray-800 font-sans flex flex-col items-center">
-      <Head>
-        <title>Saathi | Your AI Wellness Buddy</title>
-        <meta name="description" content="Saathi - Your playful and soothing AI mental wellness companion." />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Header */}
-      <header className="w-full bg-white shadow-md sticky top-0 z-50">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-lg border-b border-border">
         <nav className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <span className="text-2xl font-bold text-teal-600">Saathi</span>
-          <div className="flex space-x-4">
-            {typeof window !== 'undefined' && localStorage.getItem('accessToken') ? (
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-display font-bold">
+              S
+            </div>
+            <span className="text-lg font-display font-bold text-foreground">Saathi</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {isAuthed ? (
               <button
                 onClick={() => {
-                  router.push('/');
-                  localStorage.removeItem('accessToken');
+                  localStorage.removeItem("accessToken");
+                  setIsAuthed(false);
+                  router.push("/");
                 }}
-                className="text-sm bg-teal-500 text-white px-4 py-2 rounded-full hover:bg-teal-600 transition"
+                className="text-sm bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition"
               >
                 Log Out
               </button>
             ) : (
               <>
-                <Link href="/login" className="text-sm text-teal-600 hover:underline py-2">
+                <Link href="/login" className="text-sm text-primary hover:underline py-2">
                   Log In
                 </Link>
-                <Link href="/signup" className="text-sm bg-teal-500 text-white px-4 py-2 rounded-full hover:bg-teal-600 transition">
+                <Link
+                  href="/signup"
+                  className="text-sm bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition"
+                >
                   Sign Up
                 </Link>
               </>
@@ -86,145 +133,130 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-4xl font-bold text-teal-700 mb-4">
-          Meet <span className="text-blue-600">Saathi</span>, Your Wellness Buddy
+      <main className="w-full max-w-4xl mx-auto px-4 py-16 sm:py-24 text-center relative overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none -z-10" style={{ background: 'var(--mood-joy)' }} />
+        <div className="absolute top-10 right-1/4 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none -z-10" style={{ background: 'var(--mood-focus)' }} />
+
+        <div className="flex justify-center mb-6">
+          <MoodFace tone="joy" size={100} />
+        </div>
+
+        <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-foreground mb-4 text-balance">
+          Meet <span className="text-primary">Saathi</span>, Your Wellness Buddy
         </h1>
-        <p className="text-gray-600 mb-8">
+        <p className="text-muted-foreground text-base sm:text-lg mb-8 max-w-2xl mx-auto text-balance">
           A playful and soothing AI companion to help you navigate your mental well-being journey.
         </p>
-        <div className="flex justify-center space-x-4">
-          <Link href="/signup" className="bg-teal-500 text-white px-6 py-3 rounded-full hover:bg-teal-600 transition">
+        <div className="flex justify-center">
+          <Link
+            href="/signup"
+            className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold shadow-neu-sm hover:bg-primary/90 hover:scale-105 active:scale-95 transition-transform"
+          >
             Get Started
           </Link>
         </div>
       </main>
 
       {/* Features Section */}
-      <section className="w-full bg-white py-16">
+      <section className="w-full py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-teal-700 mb-8">Why Choose Saathi?</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className={`p-6 rounded-lg shadow-md transition-all duration-300 transform 
-                  ${activeFeature === index ? "scale-105 bg-teal-50 border-2 border-teal-300" : "bg-white hover:shadow-lg hover:translate-y-[-5px]"}
-                  cursor-pointer relative`}
-                onClick={() => setActiveFeature(activeFeature === index ? -1 : index)}
-              >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg font-semibold text-teal-700 mb-2">{feature.title}</h3>
-                
-                {/* "Click to learn more" indicator that shows when not expanded */}
-                {activeFeature !== index && (
-                  <div className="text-xs text-teal-500 mt-2 flex items-center justify-center">
-                    <span>Click to learn more</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10">Why Choose Saathi?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {features.map((feature) => {
+              const tone = toneClasses(feature.tone);
+              return (
+                <div
+                  key={feature.title}
+                  className="p-6 rounded-2xl bg-card shadow-neu-md hover:-translate-y-1 transition-transform duration-300 text-left"
+                >
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-4 ${tone.soft} ${tone.text}`}>
+                    <feature.icon className="h-5 w-5" />
                   </div>
-                )}
-                
-                {/* Description that appears when clicked */}
-                {activeFeature === index && (
-                  <>
-                    <p className="text-gray-600 mt-3">{feature.description}</p>
-                    <div className="text-xs text-teal-500 mt-3 flex items-center justify-center">
-                      <span>Click to collapse</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                      </svg>
-                    </div>
-                  </>
-                )}
-                
-                {/* Subtle button-like appearance */}
-                {activeFeature !== index && (
-                  <div className="absolute inset-0 rounded-lg border border-gray-200 opacity-50 pointer-events-none"></div>
-                )}
-              </div>
-            ))}
+                  <h3 className="text-base font-semibold text-foreground mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section className="w-full bg-gradient-to-b from-teal-50 to-blue-50 py-16">
+      <section className="w-full py-16 sm:py-20 bg-muted/30">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-teal-700 mb-8">How It Works</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px]">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 text-teal-600 mb-4">
-                <span className="text-xl font-bold">1</span>
-              </div>
-              <h3 className="text-lg font-semibold text-teal-700 mb-2">Sign Up</h3>
-              <div className="text-3xl mt-2 mb-2">📝</div>
-              <p className="text-sm text-gray-600 mt-2">Create your account in minutes. Tell us a bit about yourself so we can personalize your experience.</p>
-            </div>
-            
-            <div className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px]">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 text-teal-600 mb-4">
-                <span className="text-xl font-bold">2</span>
-              </div>
-              <h3 className="text-lg font-semibold text-teal-700 mb-2">Connect</h3>
-              <div className="text-3xl mt-2 mb-2">💬</div>
-              <p className="text-sm text-gray-600 mt-2">Chat with Saathi anytime. Share your thoughts, feelings, or concerns in a safe, judgment-free space.</p>
-            </div>
-            
-            <div className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px]">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 text-teal-600 mb-4">
-                <span className="text-xl font-bold">3</span>
-              </div>
-              <h3 className="text-lg font-semibold text-teal-700 mb-2">Grow</h3>
-              <div className="text-3xl mt-2 mb-2">🌱</div>
-              <p className="text-sm text-gray-600 mt-2">Track your progress and develop healthy mental habits with personalized exercises and insights.</p>
-            </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10">How It Works</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {steps.map((step, index) => {
+              const tone = toneClasses(step.tone);
+              return (
+                <div
+                  key={step.title}
+                  className="p-6 rounded-2xl bg-card shadow-neu-md hover:-translate-y-1 transition-transform duration-300"
+                >
+                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full mb-3 ${tone.soft} ${tone.text}`}>
+                    <span className="text-base font-bold">{index + 1}</span>
+                  </div>
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center mx-auto my-3 ${tone.soft} ${tone.text}`}>
+                    <step.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground mb-2">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+                </div>
+              );
+            })}
           </div>
-          
+
           {/* Progress indicator */}
-          <div className="mt-8 flex justify-center">
-            <div className="flex items-center">
-              <div className="w-3 h-3 rounded-full bg-teal-500"></div>
-              <div className="w-12 h-1 bg-teal-300"></div>
-              <div className="w-3 h-3 rounded-full bg-teal-500"></div>
-              <div className="w-12 h-1 bg-teal-300"></div>
-              <div className="w-3 h-3 rounded-full bg-teal-500"></div>
-            </div>
+          <div className="mt-10 flex justify-center items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+            <div className="w-10 h-0.5 bg-primary/30" />
+            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+            <div className="w-10 h-0.5 bg-primary/30" />
+            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="w-full bg-white py-16">
+      <section className="w-full py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-teal-700 mb-8">What People Are Saying</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="p-6 bg-teal-50 rounded-lg shadow-md">
-                <div className="text-4xl mb-4">{testimonial.icon}</div>
-                <h3 className="text-lg font-semibold text-teal-700 mb-2">{testimonial.name}</h3>
-                <p className="text-sm text-gray-600 italic">"{testimonial.feedback}"</p>
-                <p className="text-xs text-teal-500 mt-2">{testimonial.role}</p>
-              </div>
-            ))}
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10">What People Are Saying</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {testimonials.map((testimonial) => {
+              const tone = toneClasses(testimonial.tone);
+              return (
+                <div
+                  key={testimonial.name}
+                  className="p-6 rounded-2xl bg-card shadow-neu-md text-left"
+                >
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-4 ${tone.soft} ${tone.text}`}>
+                    <testimonial.icon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">&ldquo;{testimonial.feedback}&rdquo;</p>
+                  <h3 className="text-sm font-semibold text-foreground mt-4">{testimonial.name}</h3>
+                  <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="w-full bg-gradient-to-b from-teal-50 to-blue-50 py-16 text-center">
+      <section className="w-full py-16 sm:py-20 bg-muted/30 text-center">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-teal-700 mb-4">Start Your Journey Today</h2>
-          <p className="text-gray-600 mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">Start Your Journey Today</h2>
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto text-balance">
             Join thousands of others taking steps toward better mental well-being with Saathi.
           </p>
-          <Link href="/signup" className="bg-teal-500 text-white px-8 py-3 rounded-full hover:bg-teal-600 transition">
+          <Link
+            href="/signup"
+            className="inline-block bg-primary text-primary-foreground px-8 py-3 rounded-full font-semibold shadow-neu-sm hover:bg-primary/90 hover:scale-105 active:scale-95 transition-transform"
+          >
             Sign Up for Free
           </Link>
         </div>
       </section>
-
     </div>
   );
 }

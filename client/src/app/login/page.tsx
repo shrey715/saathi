@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { authApi, ApiError } from '@/lib/api';
 
 export default function Login() {
     const router = useRouter();
@@ -11,34 +12,17 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
 
         try {
-            const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000') + '/api/login';
-            const response = await fetch(backendUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.detail || 'Login failed');
-            }
-
-            localStorage.setItem('accessToken', data.access_token);
+            const { access_token } = await authApi.login({ username, password });
+            localStorage.setItem('accessToken', access_token);
             router.push('/home');
         } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : 'Invalid username or password. Please try again.';
+            const errorMessage = err instanceof ApiError ? err.message : 'Invalid username or password. Please try again.';
             setError(errorMessage);
             console.error('Login error:', err);
         } finally {
@@ -47,18 +31,20 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-teal-50 flex flex-col items-center justify-center text-gray-800 font-sans">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 relative overflow-hidden">
+            <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: 'var(--mood-focus)' }} />
+            <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-30 pointer-events-none" style={{ background: 'var(--mood-joy)' }} />
+            <div className="w-full max-w-md bg-card rounded-3xl shadow-neu-lg p-8 relative">
                 <div className="text-center">
-                    <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto">
+                    <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-2xl font-display font-bold mx-auto shadow-neu-sm">
                         S
                     </div>
-                    <h2 className="mt-6 text-3xl font-bold text-teal-700">Welcome Back</h2>
-                    <p className="mt-2 text-sm text-gray-600">Log in to continue your wellness journey</p>
+                    <h2 className="mt-6 text-2xl font-bold text-foreground">Welcome Back</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">Log in to continue your wellness journey</p>
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm mt-4">
+                    <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md text-sm mt-4">
                         {error}
                     </div>
                 )}
@@ -66,7 +52,7 @@ export default function Login() {
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="username" className="block text-sm font-medium text-foreground">
                                 Username
                             </label>
                             <input
@@ -76,13 +62,13 @@ export default function Login() {
                                 required
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-gray-900"
+                                className="mt-1 block w-full px-4 py-2.5 bg-background border-transparent rounded-xl shadow-neu-inset focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
                                 placeholder="Enter your username"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="password" className="block text-sm font-medium text-foreground">
                                 Password
                             </label>
                             <input
@@ -92,45 +78,37 @@ export default function Login() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-gray-900"
+                                className="mt-1 block w-full px-4 py-2.5 bg-background border-transparent rounded-xl shadow-neu-inset focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
                                 placeholder="••••••••"
                             />
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <input
-                                id="remember-me"
-                                name="remember-me"
-                                type="checkbox"
-                                className="h-4 w-4 text-teal-500 focus:ring-teal-500 border-gray-300 rounded"
-                            />
-                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                                Remember me
-                            </label>
-                        </div>
-
-                        <div className="text-sm">
-                            <Link href="/forgot-password" className="font-medium text-teal-600 hover:text-teal-500">
-                                Forgot your password?
-                            </Link>
-                        </div>
+                    <div className="flex items-center">
+                        <input
+                            id="remember-me"
+                            name="remember-me"
+                            type="checkbox"
+                            className="h-4 w-4 text-primary focus:ring-ring border-input rounded"
+                        />
+                        <label htmlFor="remember-me" className="ml-2 block text-sm text-foreground">
+                            Remember me
+                        </label>
                     </div>
 
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3 px-4 bg-teal-500 text-white rounded-md shadow-sm hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-75 disabled:cursor-not-allowed"
+                        className="w-full py-3 px-4 bg-primary text-primary-foreground font-semibold rounded-full shadow-neu-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-75 disabled:cursor-not-allowed"
                     >
                         {isLoading ? 'Logging in...' : 'Log in'}
                     </button>
                 </form>
 
                 <div className="text-center text-sm mt-4">
-                    <p className="text-gray-600">
+                    <p className="text-muted-foreground">
                         Don&apos;t have an account?{' '}
-                        <Link href="/signup" className="font-medium text-teal-600 hover:text-teal-500">
+                        <Link href="/signup" className="font-medium text-primary hover:text-primary/80">
                             Sign up for free
                         </Link>
                     </p>
